@@ -15,7 +15,7 @@ function App() {
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset>
-          <ResizablePanelGroup direction="horizontal" className="h-full">
+          <ResizablePanelGroup orientation="horizontal" className="h-full">
             <ResizablePanel defaultSize={70} minSize={40}>
               <ContentArea />
             </ResizablePanel>

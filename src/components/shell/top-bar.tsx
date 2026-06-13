@@ -20,6 +20,7 @@ import { ThemeToggle } from "./theme-toggle";
 export function TopBar() {
   const setInspectorOpen = useAppStore((s) => s.setInspectorOpen);
   const inspectorOpen = useAppStore((s) => s.inspectorOpen);
+  const setCommandOpen = useAppStore((s) => s.setCommandOpen);
   const activeLibrary = useLibraryStore((s) =>
     s.libraries.find((l) => l.id === s.activeLibraryId),
   );
@@ -37,10 +38,11 @@ export function TopBar() {
         <ChevronsUpDownIcon className="size-3.5 shrink-0 opacity-60" />
       </Button>
 
-      {/* Arama tetikleyici (komut paleti M3) */}
+      {/* Arama tetikleyici → Ctrl+K komut paleti */}
       <Button
         variant="outline"
         size="sm"
+        onClick={() => setCommandOpen(true)}
         className="text-muted-foreground ml-1 hidden w-64 justify-start gap-2 font-normal sm:flex"
       >
         <SearchIcon className="size-4" />

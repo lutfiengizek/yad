@@ -115,6 +115,16 @@ const tr = {
     dragDropHint: "Dosyaları buraya sürükleyin",
     noFiles: "Bu klasörde dosya yok",
   },
+  command: {
+    title: "Komut Paleti",
+    description: "Arşivde dosya, etiket, kişi ve koleksiyon ara",
+    placeholder: "Dosya, etiket, kişi ara…",
+    noResults: "Sonuç yok",
+    files: "DOSYALAR",
+    tags: "ETİKETLER",
+    persons: "KİŞİLER",
+    collections: "KOLEKSİYONLAR",
+  },
   person: {
     fullName: "Ad Soyad",
     title: "Unvan",

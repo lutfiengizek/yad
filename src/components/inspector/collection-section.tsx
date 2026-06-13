@@ -20,9 +20,11 @@ import {
 } from "@/components/ui/popover";
 import { t } from "@/i18n";
 import type { FileItem } from "@/lib/api/types";
+import { useCanEdit } from "@/hooks/use-can-edit";
 import { useCollectionStore } from "@/stores/collection-store";
 
 export function CollectionSection({ file }: { file: FileItem }) {
+  const canEdit = useCanEdit();
   const collections = useCollectionStore((s) => s.collections);
   const create = useCollectionStore((s) => s.create);
   const addFiles = useCollectionStore((s) => s.addFiles);
@@ -71,17 +73,20 @@ export function CollectionSection({ file }: { file: FileItem }) {
           <Badge key={c.id} variant="secondary" className="gap-1 pr-1">
             <FolderIcon className="size-3" />
             {c.name}
-            <button
-              type="button"
-              className="hover:text-destructive"
-              onClick={() => void removeFiles(c.id, [file.id])}
-              aria-label={`${c.name} ${t("inspector.remove")}`}
-            >
-              <XIcon className="size-3" />
-            </button>
+            {canEdit && (
+              <button
+                type="button"
+                className="hover:text-destructive"
+                onClick={() => void removeFiles(c.id, [file.id])}
+                aria-label={`${c.name} ${t("inspector.remove")}`}
+              >
+                <XIcon className="size-3" />
+              </button>
+            )}
           </Badge>
         ))}
 
+        {canEdit && (
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <Button variant="outline" size="xs" className="gap-1">
@@ -125,6 +130,7 @@ export function CollectionSection({ file }: { file: FileItem }) {
             </Command>
           </PopoverContent>
         </Popover>
+        )}
       </div>
     </div>
   );

@@ -21,10 +21,12 @@ import {
 } from "@/components/ui/popover";
 import { t } from "@/i18n";
 import type { FileItem } from "@/lib/api/types";
+import { useCanEdit } from "@/hooks/use-can-edit";
 import { initials } from "@/lib/person";
 import { usePersonStore } from "@/stores/person-store";
 
 export function PersonSection({ file }: { file: FileItem }) {
+  const canEdit = useCanEdit();
   const persons = usePersonStore((s) => s.persons);
   const create = usePersonStore((s) => s.create);
   const link = usePersonStore((s) => s.link);
@@ -73,17 +75,20 @@ export function PersonSection({ file }: { file: FileItem }) {
               </AvatarFallback>
             </Avatar>
             {p.fullName}
-            <button
-              type="button"
-              className="hover:text-destructive"
-              onClick={() => void unlink([file.id], p.id)}
-              aria-label={`${p.fullName} ${t("inspector.remove")}`}
-            >
-              <XIcon className="size-3" />
-            </button>
+            {canEdit && (
+              <button
+                type="button"
+                className="hover:text-destructive"
+                onClick={() => void unlink([file.id], p.id)}
+                aria-label={`${p.fullName} ${t("inspector.remove")}`}
+              >
+                <XIcon className="size-3" />
+              </button>
+            )}
           </Badge>
         ))}
 
+        {canEdit && (
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <Button variant="outline" size="xs" className="gap-1">
@@ -127,6 +132,7 @@ export function PersonSection({ file }: { file: FileItem }) {
             </Command>
           </PopoverContent>
         </Popover>
+        )}
       </div>
     </div>
   );

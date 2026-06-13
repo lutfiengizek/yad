@@ -4,10 +4,12 @@
 import type { ReactNode } from "react";
 import { ExternalLinkIcon, StarIcon } from "lucide-react";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useCanEdit } from "@/hooks/use-can-edit";
 import { FileKindIcon, kindLabel } from "@/components/content/file-kind";
 import { CollectionSection } from "./collection-section";
 import { NoteSection } from "./note-section";
@@ -24,9 +26,11 @@ import { useFileStore } from "@/stores/file-store";
 function EditableRating({
   value,
   onRate,
+  disabled,
 }: {
   value: number;
   onRate: (n: number) => void;
+  disabled?: boolean;
 }) {
   return (
     <div className="flex items-center gap-0.5">
@@ -35,8 +39,9 @@ function EditableRating({
           key={n}
           type="button"
           aria-label={`${n}`}
+          disabled={disabled}
           onClick={() => onRate(n === value ? 0 : n)}
-          className="text-muted-foreground/40 hover:text-primary transition-colors"
+          className="text-muted-foreground/40 enabled:hover:text-primary transition-colors disabled:cursor-default"
         >
           <StarIcon
             className={cn("size-5", n <= value && "fill-primary text-primary")}
@@ -58,6 +63,7 @@ function MetaRow({ label, value }: { label: string; value: ReactNode }) {
 
 export function InspectorPanel() {
   const file = useFileStore((s) => s.files.find((f) => f.id === s.selectedId));
+  const canEdit = useCanEdit();
 
   if (!file) {
     return (
@@ -91,7 +97,16 @@ export function InspectorPanel() {
         </div>
 
         <div className="space-y-1">
-          <h2 className="text-sm font-medium break-all">{file.name}</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="flex-1 text-sm font-medium break-all">
+              {file.name}
+            </h2>
+            {!canEdit && (
+              <Badge variant="secondary" className="shrink-0 text-[10px]">
+                {t("collab.readOnly")}
+              </Badge>
+            )}
+          </div>
           <p className="text-muted-foreground text-xs">
             {kindLabel(file.kind)} · {formatBytes(file.sizeBytes)}
             {!file.isAvailable && ` · ${t("inspector.offline")}`}
@@ -102,7 +117,11 @@ export function InspectorPanel() {
           <span className="text-muted-foreground text-xs">
             {t("inspector.rating")}
           </span>
-          <EditableRating value={file.rating} onRate={rate} />
+          <EditableRating
+            value={file.rating}
+            onRate={rate}
+            disabled={!canEdit}
+          />
         </div>
 
         <Tabs defaultValue="detail">

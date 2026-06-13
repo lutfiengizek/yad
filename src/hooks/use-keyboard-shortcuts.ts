@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { t } from "@/i18n";
 import { isEditableTarget } from "@/lib/dom";
 import { useAppStore } from "@/stores/app-store";
+import { useCollabStore } from "@/stores/collab-store";
 import { useFileStore } from "@/stores/file-store";
 import { useTrashStore } from "@/stores/trash-store";
 
@@ -20,6 +21,7 @@ export function useKeyboardShortcuts() {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
 
       if (e.key === "Delete") {
+        if (useCollabStore.getState().myRole === "viewer") return;
         const id = useFileStore.getState().selectedId;
         if (!id) return;
         e.preventDefault();

@@ -20,9 +20,11 @@ import {
 } from "@/components/ui/popover";
 import { t } from "@/i18n";
 import type { FileItem } from "@/lib/api/types";
+import { useCanEdit } from "@/hooks/use-can-edit";
 import { useTagStore } from "@/stores/tag-store";
 
 export function TagSection({ file }: { file: FileItem }) {
+  const canEdit = useCanEdit();
   const tags = useTagStore((s) => s.tags);
   const assign = useTagStore((s) => s.assign);
   const unassign = useTagStore((s) => s.unassign);
@@ -62,17 +64,20 @@ export function TagSection({ file }: { file: FileItem }) {
         {assigned.map((tag) => (
           <Badge key={tag.id} variant="secondary" className="gap-1 pr-1">
             {tag.name}
-            <button
-              type="button"
-              className="hover:text-destructive"
-              onClick={() => void unassign([file.id], tag.id)}
-              aria-label={`${tag.name} ${t("inspector.remove")}`}
-            >
-              <XIcon className="size-3" />
-            </button>
+            {canEdit && (
+              <button
+                type="button"
+                className="hover:text-destructive"
+                onClick={() => void unassign([file.id], tag.id)}
+                aria-label={`${tag.name} ${t("inspector.remove")}`}
+              >
+                <XIcon className="size-3" />
+              </button>
+            )}
           </Badge>
         ))}
 
+        {canEdit && (
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <Button variant="outline" size="xs" className="gap-1">
@@ -116,6 +121,7 @@ export function TagSection({ file }: { file: FileItem }) {
             </Command>
           </PopoverContent>
         </Popover>
+        )}
       </div>
     </div>
   );

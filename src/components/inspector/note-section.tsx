@@ -8,9 +8,11 @@ import StarterKit from "@tiptap/starter-kit";
 import { t } from "@/i18n";
 import { api } from "@/lib/api";
 import type { FileItem } from "@/lib/api/types";
+import { useCanEdit } from "@/hooks/use-can-edit";
 import { useFileStore } from "@/stores/file-store";
 
 export function NoteSection({ file }: { file: FileItem }) {
+  const canEdit = useCanEdit();
   const editor = useEditor({
     extensions: [StarterKit],
     immediatelyRender: false,
@@ -34,6 +36,10 @@ export function NoteSection({ file }: { file: FileItem }) {
       cancelled = true;
     };
   }, [file.id, editor]);
+
+  useEffect(() => {
+    editor?.setEditable(canEdit);
+  }, [editor, canEdit]);
 
   async function save() {
     if (!editor) return;

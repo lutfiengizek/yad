@@ -4,6 +4,7 @@
 import { useEffect } from "react";
 import { useTheme } from "next-themes";
 
+import { useAppStore } from "@/stores/app-store";
 import { useCollectionStore } from "@/stores/collection-store";
 import { useFileStore } from "@/stores/file-store";
 import { useLibraryStore } from "@/stores/library-store";
@@ -21,7 +22,10 @@ export function useBootstrap() {
       await useLibraryStore.getState().load();
       if (cancelled) return;
       const settings = useSettingsStore.getState().settings;
-      if (settings) setTheme(settings.theme);
+      if (settings) {
+        setTheme(settings.theme);
+        useAppStore.getState().setViewMode(settings.defaultView);
+      }
       await Promise.all([
         useFileStore.getState().selectView("all", {}),
         useTagStore.getState().load(),

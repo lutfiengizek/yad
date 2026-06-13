@@ -18,11 +18,13 @@ import { DropOverlay } from "@/components/content/drop-overlay";
 import { Toaster } from "@/components/ui/sonner";
 import { useAppStore } from "@/stores/app-store";
 import { useBootstrap } from "@/hooks/use-bootstrap";
+import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 
 function App() {
   const inspectorOpen = useAppStore((s) => s.inspectorOpen);
   const route = useAppStore((s) => s.route);
   useBootstrap();
+  useKeyboardShortcuts();
 
   return (
     <>

@@ -14,19 +14,10 @@ import { Button } from "@/components/ui/button";
 import { FileKindIcon, kindLabel } from "@/components/content/file-kind";
 import { t } from "@/i18n";
 import { assetUrl } from "@/lib/asset";
+import { isEditableTarget } from "@/lib/dom";
 import { formatBytes } from "@/lib/format";
 import { useAppStore } from "@/stores/app-store";
 import { useFileStore } from "@/stores/file-store";
-
-function isEditableTarget(target: EventTarget | null): boolean {
-  const el = target as HTMLElement | null;
-  if (!el) return false;
-  return (
-    el.isContentEditable ||
-    el.tagName === "INPUT" ||
-    el.tagName === "TEXTAREA"
-  );
-}
 
 export function QuickPreview() {
   const open = useAppStore((s) => s.previewOpen);

@@ -78,6 +78,8 @@ const tr = {
     itemCount: "öğe",
     viewGrid: "Izgara görünümü",
     viewList: "Liste görünümü",
+    viewLoupe: "Loupe (büyük önizleme)",
+    viewCompare: "Karşılaştır",
     sort: "Sırala",
     filter: "Filtre",
     densityIncrease: "Yoğunluğu artır",

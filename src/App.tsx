@@ -12,6 +12,7 @@ import { TopBar } from "@/components/shell/top-bar";
 import { StatusBar } from "@/components/shell/status-bar";
 import { OnboardingWizard } from "@/components/onboarding/onboarding-wizard";
 import { CommandPalette } from "@/components/shell/command-palette";
+import { QuickPreview } from "@/components/content/quick-preview";
 import { ImportQueue } from "@/components/content/import-queue";
 import { DropOverlay } from "@/components/content/drop-overlay";
 import { Toaster } from "@/components/ui/sonner";
@@ -53,6 +54,7 @@ function App() {
       </SidebarProvider>
       <OnboardingWizard />
       <CommandPalette />
+      <QuickPreview />
       <DropOverlay />
       <ImportQueue />
       <Toaster />

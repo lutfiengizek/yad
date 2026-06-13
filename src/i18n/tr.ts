@@ -115,6 +115,10 @@ const tr = {
     dragDropHint: "Dosyaları buraya sürükleyin",
     noFiles: "Bu klasörde dosya yok",
   },
+  preview: {
+    prev: "Önceki",
+    next: "Sonraki",
+  },
   command: {
     title: "Komut Paleti",
     description: "Arşivde dosya, etiket, kişi ve koleksiyon ara",

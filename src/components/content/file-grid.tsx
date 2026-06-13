@@ -22,6 +22,7 @@ interface FileGridProps {
   density: number;
   badges: Settings["badges"];
   onSelect: (id: string) => void;
+  onOpen?: (id: string) => void;
 }
 
 export function FileGrid({
@@ -30,6 +31,7 @@ export function FileGrid({
   density,
   badges,
   onSelect,
+  onOpen,
 }: FileGridProps) {
   return (
     <div className={cn("grid gap-3 p-3", DENSITY_COLS[density] ?? DENSITY_COLS[3])}>
@@ -38,6 +40,7 @@ export function FileGrid({
           key={f.id}
           type="button"
           onClick={() => onSelect(f.id)}
+          onDoubleClick={() => onOpen?.(f.id)}
           aria-pressed={selectedId === f.id}
           className={cn(
             "group flex flex-col gap-1 rounded-md p-1 text-left transition-colors hover:bg-accent/50",

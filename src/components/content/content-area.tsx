@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { t } from "@/i18n";
 import { startClipboardImport } from "@/lib/import";
+import { useAppStore } from "@/stores/app-store";
 import { useFileStore } from "@/stores/file-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { FileGrid, FileGridSkeleton } from "./file-grid";
@@ -39,6 +40,12 @@ export function ContentArea() {
   const select = useFileStore((s) => s.select);
   const settings = useSettingsStore((s) => s.settings);
   const updateSettings = useSettingsStore((s) => s.update);
+  const setPreviewOpen = useAppStore((s) => s.setPreviewOpen);
+
+  function open(id: string) {
+    select(id);
+    setPreviewOpen(true);
+  }
 
   const view = settings?.defaultView ?? "grid";
   const density = settings?.gridDensity ?? 3;
@@ -115,9 +122,15 @@ export function ContentArea() {
             density={density}
             badges={badges}
             onSelect={select}
+            onOpen={open}
           />
         ) : (
-          <FileList files={files} selectedId={selectedId} onSelect={select} />
+          <FileList
+            files={files}
+            selectedId={selectedId}
+            onSelect={select}
+            onOpen={open}
+          />
         )}
       </ScrollArea>
     </div>

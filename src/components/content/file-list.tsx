@@ -20,9 +20,15 @@ interface FileListProps {
   files: FileItem[];
   selectedId: string | null;
   onSelect: (id: string) => void;
+  onOpen?: (id: string) => void;
 }
 
-export function FileList({ files, selectedId, onSelect }: FileListProps) {
+export function FileList({
+  files,
+  selectedId,
+  onSelect,
+  onOpen,
+}: FileListProps) {
   return (
     <Table>
       <TableHeader>
@@ -40,6 +46,7 @@ export function FileList({ files, selectedId, onSelect }: FileListProps) {
             key={f.id}
             data-state={selectedId === f.id ? "selected" : undefined}
             onClick={() => onSelect(f.id)}
+            onDoubleClick={() => onOpen?.(f.id)}
             className={cn("cursor-pointer", !f.isAvailable && "opacity-60")}
           >
             <TableCell className="font-medium">

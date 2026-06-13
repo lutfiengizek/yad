@@ -53,13 +53,20 @@
 - [x] M5.3 Senkron popover (alt çubuk) + çatışma çözüm modalı (mine/theirs/merge).
 - [x] M5.4 Viewer salt-okunur gating; entegrasyon cilası: rename/reveal/source-url/profil (kullanılmayan komutlar bağlandı).
 
+## M6 — Cila & Dağıtım ✓
+- [x] M6.1 Ekran/bileşen tutarlılık denetimi (Explore audit).
+- [x] M6.2 Ayarlar sayfası: dağınık ayarlar tek diyalogta (tema/dil/görünüm/yoğunluk/rozet/çöp/oto-güncelleme), Settings ikonu işlevsel.
+- [x] M6.3 Klavye kısayolları referansı (? tuşu) + auto-update API (mock stub; backend yok).
+- [x] M6.4 Paylaşılan EmptyState; sayfa başlıkları h-12 hizalı.
+- [x] M6.5 Lazy-load (tiptap not editörü + route sayfaları) + vendor-radix chunk; başlangıç 434kB.
+
 ## Tasarım cilası (kullanıcı geri bildirimi)
 Sidebar/topbar/statusbar/inspector tutarlılığı: etkileşimsiz metin butona sarılmaz,
 placeholder'lar temiz, çalışma alanı aktif kütüphane adını gösterir. Token-tabanlı,
 hardcoded renk yok.
 
 ## Durum
-M0–M5 tamam: 56 test geçer, `tsc`/`pnpm build` temiz. Tüm M0–M5 backend komutları FE'de bağlı.
+M0–M6 tamam: 57 test geçer, `tsc`/`pnpm build` temiz (chunk uyarısı yok). Tüm backend komutları FE'de bağlı.
 Tarayıcıda mock; Tauri içinde otomatik gerçek `invoke` (`shouldUseMock` Tauri'yi algılar).
 `VITE_USE_MOCK=false`/`true` ile zorla; onboarding'i görmek için `VITE_MOCK_EMPTY=true`.
 Görsel açık/koyu tema piksel kontrolü çalışan uygulamada elle doğrulanmalı

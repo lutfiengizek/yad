@@ -53,6 +53,22 @@ pub fn extension(path: &Path) -> String {
         .unwrap_or_default()
 }
 
+/// İçeriği içerik-adresli blob deposuna yazar (`<blobs_dir>/<hash>`). Aynı hash varsa
+/// tekrar yazmaz (dedup). Sürüm geçmişinin "hiçbir şey kaybolmaz" güvencesidir.
+pub fn store_blob(blobs_dir: &Path, src: &Path, content_hash: &str) -> Result<(), AppError> {
+    std::fs::create_dir_all(blobs_dir)?;
+    let dest = blobs_dir.join(content_hash);
+    if dest.exists() {
+        return Ok(());
+    }
+    crate::fs::atomic_copy(src, &dest)
+}
+
+/// Bir blob'un yolu (`<blobs_dir>/<hash>`).
+pub fn blob_path(blobs_dir: &Path, content_hash: &str) -> std::path::PathBuf {
+    blobs_dir.join(content_hash)
+}
+
 /// Görsel ise `<thumb_dir>/<hash>.webp` üretir ve yolunu döner; değilse `None`.
 ///
 /// Bozuk/okunamayan görsel thumbnail üretmez (hata yutulur) — `None` döner.

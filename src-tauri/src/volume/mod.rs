@@ -35,6 +35,9 @@ pub fn index_db_path(root: &Path) -> PathBuf {
 pub fn thumbnails_dir(root: &Path) -> PathBuf {
     yad_dir(root).join("thumbnails")
 }
+pub fn blobs_dir(root: &Path) -> PathBuf {
+    yad_dir(root).join("blobs")
+}
 pub fn metadata_path(root: &Path) -> PathBuf {
     yad_dir(root).join("metadata").join("metadata.automerge")
 }

@@ -1,13 +1,13 @@
 //! M2 komutları: etiketler (Automerge kaynak + SQLite projeksiyonu).
 
-use crate::commands::{with_active, with_active_mut};
+use crate::commands::{activity, with_active, with_active_mut};
 use crate::error::AppError;
 use crate::metadata::TagData;
 use crate::models::{Tag, TagType};
 use crate::state::AppState;
 use rusqlite::{Connection, OptionalExtension, Row};
 use serde::Deserialize;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use tauri::State;
 
 const TAG_SELECT: &str = "SELECT t.id, t.name, t.type, t.parent_id, t.color, \
@@ -146,11 +146,13 @@ pub struct TagAssignInput {
 
 #[tauri::command]
 pub fn tag_assign(state: State<'_, AppState>, input: TagAssignInput) -> Result<(), AppError> {
+    let app = state.app_handle.clone();
     with_active_mut(&state, |a| {
         let current = a.metadata.read()?;
-        if !current.tags.contains_key(&input.tag_id) {
-            return Err(AppError::NotFound(format!("etiket yok: {}", input.tag_id)));
-        }
+        let tag_name = match current.tags.get(&input.tag_id) {
+            Some(t) => t.name.clone(),
+            None => return Err(AppError::NotFound(format!("etiket yok: {}", input.tag_id))),
+        };
         let mut tag_ids = vec![input.tag_id.clone()];
         if input.apply_to_children.unwrap_or(false) {
             tag_ids.extend(descendant_tags(&current, &input.tag_id));
@@ -164,7 +166,21 @@ pub fn tag_assign(state: State<'_, AppState>, input: TagAssignInput) -> Result<(
                     }
                 }
             }
-        })
+        })?;
+        let params = HashMap::from([("tag".to_string(), tag_name)]);
+        for file_id in &input.file_ids {
+            let _ = activity::record(
+                a,
+                &app,
+                "tag.add",
+                "file",
+                file_id,
+                "",
+                Some(params.clone()),
+                false,
+            );
+        }
+        Ok(())
     })
 }
 

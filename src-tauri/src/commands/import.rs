@@ -72,6 +72,8 @@ fn import_one(
     volume_id: &str,
     src: &Path,
     mode: ImportMode,
+    actor_id: &str,
+    actor_name: &str,
     batch_id: &str,
     total: u32,
     completed: u32,
@@ -178,14 +180,34 @@ fn import_one(
         is_available: true,
     };
     file::insert_file(conn, &file)?;
+
+    // Sürüm geçmişi: içeriği blob'a snapshot'la + v1 kaydı (current). Atıf taşır.
+    content::store_blob(&volume::blobs_dir(root), &work, &file.content_hash)?;
+    crate::commands::version::record_version(
+        conn,
+        &file.id,
+        &file.content_hash,
+        file.size_bytes,
+        "İçe aktarıldı",
+        actor_id,
+        actor_name,
+        true,
+    )?;
+    let _ = crate::commands::activity::record_raw(
+        conn, app, actor_id, actor_name, "file.add", "file", &file.id, &file.name, None, false,
+    );
+
     Ok(file)
 }
 
 /// Arka plan içe aktarma döngüsü (kendi index.db bağlantısını açar).
+#[allow(clippy::too_many_arguments)]
 fn run_import(
     app: AppHandle,
     root: PathBuf,
     volume_id: String,
+    actor_id: String,
+    actor_name: String,
     paths: Vec<String>,
     mode: ImportMode,
     batch_id: String,
@@ -211,7 +233,17 @@ fn run_import(
     for p in paths {
         let src = PathBuf::from(&p);
         match import_one(
-            &app, &conn, &root, &volume_id, &src, mode, &batch_id, total, completed,
+            &app,
+            &conn,
+            &root,
+            &volume_id,
+            &src,
+            mode,
+            &actor_id,
+            &actor_name,
+            &batch_id,
+            total,
+            completed,
         ) {
             Ok(_) => {}
             Err(e) => {
@@ -254,8 +286,8 @@ pub fn import_files(
     state: State<'_, AppState>,
     input: ImportFilesInput,
 ) -> Result<BatchRef, AppError> {
-    // Aktif kütüphane kökünü kısa süre kilitle, sonra işi thread'e devret.
-    let (root, volume_id) = {
+    // Aktif kütüphane kökünü + atfı kısa süre kilitle, sonra işi thread'e devret.
+    let (root, volume_id, actor_id, actor_name) = {
         let active = state
             .active
             .lock()
@@ -271,6 +303,8 @@ pub fn import_files(
         (
             PathBuf::from(&active.meta.root_path),
             active.meta.id.clone(),
+            active.actor_id.clone(),
+            active.actor_name.clone(),
         )
     };
 
@@ -279,7 +313,9 @@ pub fn import_files(
     let mode = input.mode;
     let paths = input.paths;
     std::thread::spawn(move || {
-        run_import(app, root, volume_id, paths, mode, batch);
+        run_import(
+            app, root, volume_id, actor_id, actor_name, paths, mode, batch,
+        );
     });
 
     Ok(BatchRef { batch_id })

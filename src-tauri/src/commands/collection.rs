@@ -1,6 +1,6 @@
 //! M2 komutları: koleksiyonlar (Automerge kaynak + SQLite projeksiyonu).
 
-use crate::commands::{with_active, with_active_mut};
+use crate::commands::{activity, with_active, with_active_mut};
 use crate::error::AppError;
 use crate::metadata::CollectionData;
 use crate::models::Collection;
@@ -58,17 +58,29 @@ pub fn collection_create(
         return Err(AppError::InvalidInput("koleksiyon adı boş olamaz".into()));
     }
     let id = uuid::Uuid::new_v4().to_string();
+    let app = state.app_handle.clone();
     with_active_mut(&state, |a| {
+        let name = input.name.trim().to_string();
         a.mutate_metadata(|m| {
             m.collections.insert(
                 id.clone(),
                 CollectionData {
-                    name: input.name.trim().to_string(),
+                    name: name.clone(),
                     parent_id: input.parent_id.clone(),
                     icon: input.icon.clone(),
                 },
             );
         })?;
+        let _ = activity::record(
+            a,
+            &app,
+            "collection.create",
+            "collection",
+            &id,
+            &name,
+            None,
+            false,
+        );
         require_collection(&a.db, &id)
     })
 }

@@ -111,16 +111,16 @@ pub fn list_volumes(conn: &Connection) -> Result<Vec<Volume>, AppError> {
 
 // ---- yaşam döngüsü çekirdeği (tempdir ile test edilebilir) ----
 
-/// Yerel kimlik (actor) id'si — Automerge atfı için. Yoksa "local".
-pub fn current_actor(app_conn: &Connection) -> String {
+/// Yerel kimlik (actor id, görünen ad) — atıf için. Yoksa ("local", "Yerel").
+pub fn current_identity(app_conn: &Connection) -> (String, String) {
     app_conn
-        .query_row("SELECT id FROM identity LIMIT 1", [], |r| {
-            r.get::<_, String>(0)
+        .query_row("SELECT id, display_name FROM identity LIMIT 1", [], |r| {
+            Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?))
         })
         .optional()
         .ok()
         .flatten()
-        .unwrap_or_else(|| "local".to_string())
+        .unwrap_or_else(|| ("local".to_string(), "Yerel".to_string()))
 }
 
 /// Index.db + Automerge metadata deposunu açar ve metadatayı SQLite'a projekte eder.
@@ -223,13 +223,13 @@ pub fn library_create(
         .app_db
         .lock()
         .map_err(|_| AppError::Unknown("durum kilidi bozuldu".into()))?;
-    let actor = current_actor(&app_conn);
+    let (actor_id, actor_name) = current_identity(&app_conn);
     let (lib, index, store) = create_library_core(
         &app_conn,
         &input.name,
         &input.root_path,
         input.is_workspace_root.unwrap_or(true),
-        &actor,
+        &actor_id,
     )?;
 
     allow_asset_dir(&app, &lib.root_path);
@@ -241,7 +241,8 @@ pub fn library_create(
         meta: lib.clone(),
         db: index,
         metadata: store,
-        actor_id: actor,
+        actor_id,
+        actor_name,
     });
     Ok(lib)
 }
@@ -256,8 +257,8 @@ pub fn library_open(
         .app_db
         .lock()
         .map_err(|_| AppError::Unknown("durum kilidi bozuldu".into()))?;
-    let actor = current_actor(&app_conn);
-    let (lib, index, store) = open_library_core(&app_conn, &id, &actor)?;
+    let (actor_id, actor_name) = current_identity(&app_conn);
+    let (lib, index, store) = open_library_core(&app_conn, &id, &actor_id)?;
 
     allow_asset_dir(&app, &lib.root_path);
     let mut active = state
@@ -268,7 +269,8 @@ pub fn library_open(
         meta: lib.clone(),
         db: index,
         metadata: store,
-        actor_id: actor,
+        actor_id,
+        actor_name,
     });
     Ok(lib)
 }
@@ -318,6 +320,16 @@ pub fn volume_rescan(
         "UPDATE volume SET status = ?1 WHERE id = ?2",
         params![vol.status.as_str(), vol.id],
     )?;
+
+    // Bağlıysa: çalışma kopyalarındaki dış değişiklikleri tespit edip yeni sürüm aç (M4).
+    if vol.status == VolumeStatus::Connected {
+        let _ = crate::commands::version::detect_changes(
+            &active.db,
+            Path::new(&active.meta.root_path),
+            &active.actor_id,
+            &active.actor_name,
+        );
+    }
 
     let _ = app.emit("volume:changed", &vol);
     Ok(vol)

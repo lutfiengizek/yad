@@ -1,6 +1,6 @@
 //! M2 komutları: kişi kartları (Automerge kaynak + SQLite projeksiyonu).
 
-use crate::commands::{with_active, with_active_mut};
+use crate::commands::{activity, with_active, with_active_mut};
 use crate::error::AppError;
 use crate::metadata::PersonData;
 use crate::models::{Person, PersonInput};
@@ -62,6 +62,7 @@ pub fn person_create(state: State<'_, AppState>, input: PersonInput) -> Result<P
         .to_string();
 
     let id = uuid::Uuid::new_v4().to_string();
+    let app = state.app_handle.clone();
     with_active_mut(&state, |a| {
         a.mutate_metadata(|m| {
             m.persons.insert(
@@ -77,6 +78,16 @@ pub fn person_create(state: State<'_, AppState>, input: PersonInput) -> Result<P
                 },
             );
         })?;
+        let _ = activity::record(
+            a,
+            &app,
+            "person.create",
+            "person",
+            &id,
+            &full_name,
+            None,
+            false,
+        );
         require_person(&a.db, &id)
     })
 }

@@ -3,6 +3,7 @@
 //! Tüm sınır struct'ları `#[serde(rename_all = "camelCase")]` kullanır; böylece
 //! Rust `snake_case` alanlar FE'ye camelCase olarak görünür.
 
+mod activity;
 mod collection;
 mod file_item;
 mod identity;
@@ -13,7 +14,9 @@ mod progress;
 mod search;
 mod settings;
 mod tag;
+mod version;
 
+pub use activity::ActivityItem;
 pub use collection::Collection;
 pub use file_item::{FileItem, FileKind};
 pub use identity::{Identity, IdentityInput};
@@ -24,6 +27,7 @@ pub use progress::{ImportPhase, ImportProgress};
 pub use search::{Page, SearchQuery, SortBy, SortDir};
 pub use settings::Settings;
 pub use tag::{Tag, TagType};
+pub use version::Version;
 
 use serde::Serialize;
 

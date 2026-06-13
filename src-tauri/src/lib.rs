@@ -9,7 +9,9 @@ mod search;
 mod state;
 mod volume;
 
-use commands::{collection, file, import, library, note, person, system, tag};
+use commands::{
+    activity, collection, file, import, library, note, person, system, tag, trash, version,
+};
 use state::AppState;
 use tauri::Manager;
 
@@ -20,8 +22,8 @@ pub fn run() {
         .setup(|app| {
             let app_data = app.path().app_data_dir()?;
             let db_path = app_data.join("yad.db");
-            let app_state =
-                AppState::new(&db_path).map_err(|e| format!("app state başlatılamadı: {e}"))?;
+            let app_state = AppState::new(&db_path, app.handle().clone())
+                .map_err(|e| format!("app state başlatılamadı: {e}"))?;
             app.manage(app_state);
             Ok(())
         })
@@ -72,6 +74,14 @@ pub fn run() {
             note::file_set_rating_bulk,
             commands::search::search,
             commands::search::search_global,
+            version::version_list,
+            version::version_restore,
+            activity::activity_list,
+            activity::activity_undo,
+            trash::file_move_to_trash,
+            trash::trash_list,
+            trash::file_restore,
+            trash::file_delete_permanent,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

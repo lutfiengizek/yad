@@ -1,3 +1,4 @@
+pub mod activity;
 pub mod collection;
 pub mod file;
 pub mod import;
@@ -7,6 +8,8 @@ pub mod person;
 pub mod search;
 pub mod system;
 pub mod tag;
+pub mod trash;
+pub mod version;
 
 use crate::error::AppError;
 use crate::state::{ActiveLibrary, AppState};

@@ -10,8 +10,10 @@ pub struct ActiveLibrary {
     pub meta: Library,
     pub db: Connection,
     pub metadata: MetadataStore,
-    /// Yerel kimlik (actor) id'si — mutasyon atfı (örn. not `updated_by`) için.
+    /// Yerel kimlik (actor) id'si — mutasyon atfı (örn. not `updated_by`, aktivite) için.
     pub actor_id: String,
+    /// Yerel kimlik görünen adı — aktivite akışında gösterim için.
+    pub actor_name: String,
 }
 
 impl ActiveLibrary {
@@ -34,15 +36,18 @@ impl ActiveLibrary {
 pub struct AppState {
     pub app_db: Mutex<Connection>,
     pub active: Mutex<Option<ActiveLibrary>>,
+    /// Olay yayını (örn. `activity:new`, `volume:changed`) için uygulama tutamacı.
+    pub app_handle: tauri::AppHandle,
 }
 
 impl AppState {
     /// `<app_data>/yad.db` yolundan global durumu kurar.
-    pub fn new(app_db_path: &Path) -> Result<Self, AppError> {
+    pub fn new(app_db_path: &Path, app_handle: tauri::AppHandle) -> Result<Self, AppError> {
         let conn = crate::db::open_app_db(app_db_path)?;
         Ok(Self {
             app_db: Mutex::new(conn),
             active: Mutex::new(None),
+            app_handle,
         })
     }
 }

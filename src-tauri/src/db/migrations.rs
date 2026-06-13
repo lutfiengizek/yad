@@ -156,6 +156,36 @@ CREATE VIRTUAL TABLE file_fts USING fts5(
 );
 "#;
 
+/// Kütüphane-başına şema, v4 (M4): içerik-adresli sürüm geçmişi + aktivite/atıf.
+const LIB_V4: &str = r#"
+CREATE TABLE version (
+    id           TEXT PRIMARY KEY,
+    file_id      TEXT NOT NULL,
+    content_hash TEXT NOT NULL,
+    size_bytes   INTEGER NOT NULL,
+    label        TEXT NOT NULL,
+    author_id    TEXT NOT NULL,
+    author_name  TEXT NOT NULL,
+    created_at   TEXT NOT NULL,
+    is_current   INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX idx_version_file ON version(file_id);
+
+CREATE TABLE activity (
+    id          TEXT PRIMARY KEY,
+    actor_id    TEXT NOT NULL,
+    actor_name  TEXT NOT NULL,
+    action      TEXT NOT NULL,
+    object_type TEXT NOT NULL,
+    object_id   TEXT NOT NULL,
+    object_name TEXT NOT NULL,
+    params_json TEXT,
+    created_at  TEXT NOT NULL,
+    undoable    INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX idx_activity_created ON activity(created_at);
+"#;
+
 /// Kütüphane-başına (`<root>/.yad/index.db`) migration'ları sırayla uygular (idempotent).
 pub fn run_library_migrations(conn: &Connection) -> Result<(), AppError> {
     let version: i64 = conn.query_row("PRAGMA user_version", [], |row| row.get(0))?;
@@ -171,6 +201,10 @@ pub fn run_library_migrations(conn: &Connection) -> Result<(), AppError> {
     if version < 3 {
         conn.execute_batch(LIB_V3)?;
         conn.pragma_update(None, "user_version", 3)?;
+    }
+    if version < 4 {
+        conn.execute_batch(LIB_V4)?;
+        conn.pragma_update(None, "user_version", 4)?;
     }
 
     Ok(())

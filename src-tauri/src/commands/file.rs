@@ -113,6 +113,20 @@ pub fn get_file(conn: &Connection, id: &str) -> Result<Option<FileItem>, AppErro
     Ok(file)
 }
 
+/// Çöp kutusundaki (soft-delete) dosyalar — en son atılan önce.
+pub fn list_trashed(conn: &Connection) -> Result<Vec<FileItem>, AppError> {
+    let sql = format!(
+        "SELECT {FILE_COLUMNS} FROM file f WHERE f.trashed_at IS NOT NULL ORDER BY f.trashed_at DESC"
+    );
+    let mut stmt = conn.prepare(&sql)?;
+    let rows = stmt.query_map([], map_row)?;
+    let mut items = rows.collect::<Result<Vec<_>, _>>()?;
+    for f in items.iter_mut() {
+        enrich(conn, f)?;
+    }
+    Ok(items)
+}
+
 /// `SearchQuery`'ye göre filtreli/sıralı/sayfalı dosya listesi.
 ///
 /// Metin verilirse FTS5 (önek + diakritik-duyarsız) ile aranır; etiket/kişi/koleksiyon
@@ -250,6 +264,7 @@ pub struct RenameInput {
 #[tauri::command]
 pub fn file_rename(state: State<'_, AppState>, input: RenameInput) -> Result<FileItem, AppError> {
     let new_name = yad_fs::validate_file_name(&input.new_name)?;
+    let app = state.app_handle.clone();
     let active = state
         .active
         .lock()
@@ -289,6 +304,18 @@ pub fn file_rename(state: State<'_, AppState>, input: RenameInput) -> Result<Fil
             params![new_name, modified, input.id],
         )?;
     }
+
+    let params = std::collections::HashMap::from([("name".to_string(), new_name.clone())]);
+    let _ = crate::commands::activity::record(
+        active,
+        &app,
+        "file.rename",
+        "file",
+        &input.id,
+        &new_name,
+        Some(params),
+        false,
+    );
 
     get_file(conn, &input.id)?
         .ok_or_else(|| AppError::Unknown("güncellenen dosya okunamadı".into()))
@@ -484,6 +511,25 @@ mod tests {
 
         // Enrich: f1 iki etiket id'si taşır.
         assert_eq!(get_file(&conn, "f1").unwrap().unwrap().tag_ids.len(), 2);
+    }
+
+    #[test]
+    fn trash_hides_from_listing_and_shows_in_trash() {
+        let conn = lib_conn();
+        insert_file(&conn, &sample("f1", "a.jpg", FileKind::Image, 0)).unwrap();
+        insert_file(&conn, &sample("f2", "b.jpg", FileKind::Image, 0)).unwrap();
+        conn.execute(
+            "UPDATE file SET trashed_at = '2026-06-13T00:00:00Z' WHERE id = 'f2'",
+            [],
+        )
+        .unwrap();
+
+        // Normal listeleme çöptekini gizler.
+        assert_eq!(list_files(&conn, &SearchQuery::default()).unwrap().total, 1);
+        // Çöp listesi yalnızca onu gösterir.
+        let trashed = list_trashed(&conn).unwrap();
+        assert_eq!(trashed.len(), 1);
+        assert_eq!(trashed[0].id, "f2");
     }
 
     #[test]

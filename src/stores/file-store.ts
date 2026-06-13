@@ -12,8 +12,10 @@ interface FileState {
   loading: boolean;
   query: SearchQuery;
   activeKey: string;
+  selectedId: string | null;
   selectView: (key: string, query: SearchQuery) => Promise<void>;
   reload: () => Promise<void>;
+  select: (id: string | null) => void;
 }
 
 export const useFileStore = create<FileState>((set, get) => ({
@@ -22,6 +24,7 @@ export const useFileStore = create<FileState>((set, get) => ({
   loading: false,
   query: {},
   activeKey: "all",
+  selectedId: null,
   selectView: async (key, query) => {
     set({ activeKey: key, query });
     await get().reload();
@@ -31,4 +34,5 @@ export const useFileStore = create<FileState>((set, get) => ({
     const page = await api.fileList(get().query);
     set({ files: page.items, total: page.total, loading: false });
   },
+  select: (id) => set({ selectedId: id }),
 }));

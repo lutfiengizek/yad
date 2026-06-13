@@ -6,11 +6,13 @@ import {
   CheckIcon,
   ExternalLinkIcon,
   FolderOpenIcon,
+  MousePointerClickIcon,
   PencilIcon,
   StarIcon,
   XIcon,
 } from "lucide-react";
 
+import { EmptyState } from "@/components/shared/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -84,9 +86,10 @@ export function InspectorPanel() {
 
   if (!file) {
     return (
-      <div className="flex h-full items-center justify-center p-6 text-center">
-        <p className="text-muted-foreground text-sm">{t("inspector.empty")}</p>
-      </div>
+      <EmptyState
+        icon={MousePointerClickIcon}
+        message={t("inspector.empty")}
+      />
     );
   }
 

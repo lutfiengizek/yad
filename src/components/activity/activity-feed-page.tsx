@@ -1,10 +1,11 @@
 // Aktivite akışı sayfası: BUGÜN/DÜN/DAHA ÖNCE gruplu; aktör + cümle + göreli zaman; geri al.
 
-import { ArrowLeftIcon } from "lucide-react";
+import { ActivityIcon, ArrowLeftIcon } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { EmptyState } from "@/components/shared/empty-state";
 import { t } from "@/i18n";
 import type { ActivityItem } from "@/lib/api/types";
 import { activitySentence, dayGroup, type DayGroup } from "@/lib/activity-text";
@@ -62,7 +63,7 @@ export function ActivityFeedPage() {
 
   return (
     <div className="flex h-full flex-col">
-      <header className="flex h-11 shrink-0 items-center gap-2 border-b px-3">
+      <header className="flex h-12 shrink-0 items-center gap-2 border-b px-3">
         <Button
           variant="ghost"
           size="icon-sm"
@@ -76,9 +77,7 @@ export function ActivityFeedPage() {
 
       <ScrollArea className="h-full flex-1">
         {activities.length === 0 ? (
-          <p className="text-muted-foreground py-12 text-center text-sm">
-            {t("activity.empty")}
-          </p>
+          <EmptyState icon={ActivityIcon} message={t("activity.empty")} />
         ) : (
           <div className="space-y-4 p-4">
             {groups.map(({ group, items }) => (

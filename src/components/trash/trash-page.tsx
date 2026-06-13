@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ArrowLeftIcon, RotateCcwIcon, Trash2Icon } from "lucide-react";
 
 import { FileKindIcon } from "@/components/content/file-kind";
+import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -62,7 +63,7 @@ export function TrashPage() {
 
   return (
     <div className="flex h-full flex-col">
-      <header className="flex h-11 shrink-0 items-center gap-2 border-b px-3">
+      <header className="flex h-12 shrink-0 items-center gap-2 border-b px-3">
         <Button
           variant="ghost"
           size="icon-sm"
@@ -103,9 +104,7 @@ export function TrashPage() {
 
       <ScrollArea className="h-full flex-1">
         {files.length === 0 ? (
-          <p className="text-muted-foreground py-12 text-center text-sm">
-            {t("trash.empty")}
-          </p>
+          <EmptyState icon={Trash2Icon} message={t("trash.empty")} />
         ) : (
           <div className="grid grid-cols-4 gap-3 p-3">
             {files.map((f) => (

@@ -13,6 +13,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { EmptyState } from "@/components/shared/empty-state";
 import { t } from "@/i18n";
 import { startClipboardImport } from "@/lib/import";
 import { useAppStore, type ViewMode } from "@/stores/app-store";
@@ -23,19 +24,6 @@ import { FileGrid, FileGridSkeleton } from "./file-grid";
 import { FileList } from "./file-list";
 import { FilterControls } from "./filter-controls";
 import { LoupeView } from "./loupe-view";
-
-function EmptyState() {
-  return (
-    <div className="flex flex-col items-center justify-center gap-3 px-8 py-24 text-center">
-      <ArchiveIcon className="text-muted-foreground size-10" />
-      <p className="text-muted-foreground max-w-xs text-sm">{t("grid.empty")}</p>
-      <Button variant="outline" size="sm" onClick={() => void startClipboardImport()}>
-        <PlusIcon className="size-4" />
-        {t("grid.addFiles")}
-      </Button>
-    </div>
-  );
-}
 
 const VIEW_BUTTONS: { mode: ViewMode; label: string; Icon: typeof ListIcon }[] = [
   { mode: "grid", label: "viewGrid", Icon: LayoutGridIcon },
@@ -88,7 +76,20 @@ export function ContentArea() {
     if (files.length === 0) {
       return (
         <ScrollArea className="h-full">
-          <EmptyState />
+          <EmptyState
+            icon={ArchiveIcon}
+            message={t("grid.empty")}
+            action={
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => void startClipboardImport()}
+              >
+                <PlusIcon className="size-4" />
+                {t("grid.addFiles")}
+              </Button>
+            }
+          />
         </ScrollArea>
       );
     }
@@ -125,7 +126,7 @@ export function ContentArea() {
 
   return (
     <div className="flex h-full flex-col">
-      <header className="flex h-11 shrink-0 items-center gap-2 border-b px-3">
+      <header className="flex h-12 shrink-0 items-center gap-2 border-b px-3">
         <h2 className="text-sm font-semibold">{t("grid.title")}</h2>
         <span className="text-muted-foreground text-xs tabular-nums">
           {total} {t("grid.itemCount")}

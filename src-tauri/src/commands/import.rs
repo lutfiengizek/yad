@@ -234,6 +234,9 @@ fn run_import(
         completed += 1;
     }
 
+    // İçe aktarılan dosyaları FTS indeksine ekle (ad bazlı arama hemen çalışsın).
+    let _ = crate::search::rebuild_fts(&conn);
+
     emit_progress(
         &app,
         &batch_id,

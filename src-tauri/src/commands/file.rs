@@ -15,10 +15,11 @@ use tauri_plugin_opener::OpenerExt;
 
 const DEFAULT_LIMIT: u32 = 200;
 
-/// SELECT sütun sırası — `map_row` ile birebir eşleşmeli.
-const FILE_COLUMNS: &str = "id, volume_id, name, rel_path, abs_path, ext, mime, kind, \
-     size_bytes, content_hash, thumbnail_path, source_url, rating, \
-     created_at, added_at, modified_at, is_available, has_note";
+/// SELECT sütun sırası (`f` = `file` tablosu) — `map_row` ile birebir eşleşmeli.
+/// `f.` niteliği FTS join'inde sütun çakışmasını (örn. `name`) önler.
+const FILE_COLUMNS: &str = "f.id, f.volume_id, f.name, f.rel_path, f.abs_path, f.ext, f.mime, \
+     f.kind, f.size_bytes, f.content_hash, f.thumbnail_path, f.source_url, f.rating, \
+     f.created_at, f.added_at, f.modified_at, f.is_available, f.has_note";
 
 fn map_row(r: &Row) -> rusqlite::Result<FileItem> {
     Ok(FileItem {
@@ -104,7 +105,7 @@ fn enrich(conn: &Connection, f: &mut FileItem) -> Result<(), AppError> {
 }
 
 pub fn get_file(conn: &Connection, id: &str) -> Result<Option<FileItem>, AppError> {
-    let sql = format!("SELECT {FILE_COLUMNS} FROM file WHERE id = ?1");
+    let sql = format!("SELECT {FILE_COLUMNS} FROM file f WHERE f.id = ?1");
     let mut file = conn.query_row(&sql, [id], map_row).optional()?;
     if let Some(f) = file.as_mut() {
         enrich(conn, f)?;
@@ -112,44 +113,65 @@ pub fn get_file(conn: &Connection, id: &str) -> Result<Option<FileItem>, AppErro
     Ok(file)
 }
 
-/// `SearchQuery`'ye göre filtreli/sıralı/sayfalı dosya listesi (M1 alt küme).
+/// `SearchQuery`'ye göre filtreli/sıralı/sayfalı dosya listesi.
 ///
-/// M1'de metin filtresi basit `LIKE`'tır (FTS M3'te gelir); tag/person/collection
-/// filtreleri M2'de Automerge projeksiyonuyla etkinleşir (şimdilik yok sayılır).
+/// Metin verilirse FTS5 (önek + diakritik-duyarsız) ile aranır; etiket/kişi/koleksiyon
+/// filtreleri **kesişim** (AND) semantiğindedir (PRD §6.3 çapraz filtreleme).
 pub fn list_files(conn: &Connection, q: &SearchQuery) -> Result<Page<FileItem>, AppError> {
-    let mut where_sql = String::from(" WHERE trashed_at IS NULL");
+    let mut from_sql = String::from("file f");
+    let mut where_sql = String::from(" WHERE f.trashed_at IS NULL");
     let mut vals: Vec<Value> = Vec::new();
 
+    // Tam-metin (FTS5) — boş/yalnızca-boşluk metinde filtre yok.
     if let Some(t) = &q.text {
-        let t = t.trim();
-        if !t.is_empty() {
-            where_sql.push_str(" AND name LIKE ?");
-            vals.push(Value::Text(format!("%{t}%")));
+        if let Some(mq) = crate::search::fts_match_query(t) {
+            from_sql = "file f JOIN file_fts ON file_fts.file_id = f.id".to_string();
+            where_sql.push_str(" AND file_fts MATCH ?");
+            vals.push(Value::Text(mq));
         }
     }
     if let Some(kinds) = &q.kinds {
         if !kinds.is_empty() {
             let ph = vec!["?"; kinds.len()].join(",");
-            where_sql.push_str(&format!(" AND kind IN ({ph})"));
+            where_sql.push_str(&format!(" AND f.kind IN ({ph})"));
             for k in kinds {
                 vals.push(Value::Text(k.as_str().to_string()));
             }
         }
     }
     if let Some(v) = &q.volume_id {
-        where_sql.push_str(" AND volume_id = ?");
+        where_sql.push_str(" AND f.volume_id = ?");
         vals.push(Value::Text(v.clone()));
     }
     if let Some(rm) = q.rating_min {
-        where_sql.push_str(" AND rating >= ?");
+        where_sql.push_str(" AND f.rating >= ?");
         vals.push(Value::Integer(rm as i64));
     }
     if q.include_offline == Some(false) {
-        where_sql.push_str(" AND is_available = 1");
+        where_sql.push_str(" AND f.is_available = 1");
+    }
+    // Etiket/kişi kesişimi: her id için EXISTS (hepsini taşımalı).
+    for tag_id in q.tag_ids.iter().flatten() {
+        where_sql.push_str(
+            " AND EXISTS (SELECT 1 FROM file_tag ft WHERE ft.file_id = f.id AND ft.tag_id = ?)",
+        );
+        vals.push(Value::Text(tag_id.clone()));
+    }
+    for person_id in q.person_ids.iter().flatten() {
+        where_sql.push_str(
+            " AND EXISTS (SELECT 1 FROM file_person fp WHERE fp.file_id = f.id AND fp.person_id = ?)",
+        );
+        vals.push(Value::Text(person_id.clone()));
+    }
+    if let Some(coll_id) = &q.collection_id {
+        where_sql.push_str(
+            " AND EXISTS (SELECT 1 FROM file_collection fc WHERE fc.file_id = f.id AND fc.collection_id = ?)",
+        );
+        vals.push(Value::Text(coll_id.clone()));
     }
 
     // Toplam (limit/offset öncesi).
-    let count_sql = format!("SELECT count(*) FROM file{where_sql}");
+    let count_sql = format!("SELECT count(*) FROM {from_sql}{where_sql}");
     let total: i64 = conn.query_row(&count_sql, params_from_iter(vals.iter()), |r| r.get(0))?;
 
     let col = match q.sort_by {
@@ -166,8 +188,9 @@ pub fn list_files(conn: &Connection, q: &SearchQuery) -> Result<Page<FileItem>, 
     let limit = q.limit.unwrap_or(DEFAULT_LIMIT);
     let offset = q.offset.unwrap_or(0);
 
-    let list_sql =
-        format!("SELECT {FILE_COLUMNS} FROM file{where_sql} ORDER BY {col} {dir} LIMIT ? OFFSET ?");
+    let list_sql = format!(
+        "SELECT {FILE_COLUMNS} FROM {from_sql}{where_sql} ORDER BY f.{col} {dir} LIMIT ? OFFSET ?"
+    );
     vals.push(Value::Integer(limit as i64));
     vals.push(Value::Integer(offset as i64));
 
@@ -401,12 +424,66 @@ mod tests {
         };
         assert_eq!(list_files(&conn, &high).unwrap().total, 1);
 
-        // metin filtresi.
+        // metin filtresi (FTS, önek + diakritik-duyarsız).
+        crate::search::rebuild_fts(&conn).unwrap();
         let txt = SearchQuery {
             text: Some("depr".into()),
             ..Default::default()
         };
-        assert_eq!(list_files(&conn, &txt).unwrap().items[0].id, "f1");
+        let res = list_files(&conn, &txt).unwrap();
+        assert_eq!(res.total, 1);
+        assert_eq!(res.items[0].id, "f1");
+    }
+
+    #[test]
+    fn fts_diacritic_insensitive_and_tag_intersection() {
+        let conn = lib_conn();
+        insert_file(&conn, &sample("f1", "Café Deprem.jpg", FileKind::Image, 3)).unwrap();
+        insert_file(&conn, &sample("f2", "Roportaj.mp3", FileKind::Audio, 1)).unwrap();
+        conn.execute(
+            "INSERT INTO tag (id, name, type) VALUES ('t1','Acil','free'),('t2','2024','time')",
+            [],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO file_tag (file_id, tag_id) VALUES ('f1','t1'),('f1','t2'),('f2','t1')",
+            [],
+        )
+        .unwrap();
+        crate::search::rebuild_fts(&conn).unwrap();
+
+        // Diakritik-duyarsız + önek: "cafe" → "Café".
+        let q = SearchQuery {
+            text: Some("cafe".into()),
+            ..Default::default()
+        };
+        let r = list_files(&conn, &q).unwrap();
+        assert_eq!(r.total, 1);
+        assert_eq!(r.items[0].id, "f1");
+
+        // Etiket adından arama (FTS tags sütunu): "acil" iki dosyayı da bulur.
+        let q = SearchQuery {
+            text: Some("acil".into()),
+            ..Default::default()
+        };
+        assert_eq!(list_files(&conn, &q).unwrap().total, 2);
+
+        // Etiket kesişimi (AND): t1 + t2 → yalnızca f1.
+        let q = SearchQuery {
+            tag_ids: Some(vec!["t1".into(), "t2".into()]),
+            ..Default::default()
+        };
+        assert_eq!(list_files(&conn, &q).unwrap().total, 1);
+
+        // Tek etiket t1 → f1 ve f2.
+        let q = SearchQuery {
+            tag_ids: Some(vec!["t1".into()]),
+            ..Default::default()
+        };
+        assert_eq!(list_files(&conn, &q).unwrap().total, 2);
+
+        // Enrich: f1 iki etiket id'si taşır.
+        assert_eq!(get_file(&conn, "f1").unwrap().unwrap().tag_ids.len(), 2);
     }
 
     #[test]

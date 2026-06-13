@@ -214,6 +214,9 @@ pub fn project_to_sqlite(conn: &Connection, meta: &MetaDoc) -> Result<(), AppErr
     }
 
     tx.commit()?;
+
+    // FTS indeksini güncel metadatayla yeniden kur (etiket/kişi/not adları aramaya girsin).
+    crate::search::rebuild_fts(conn)?;
     Ok(())
 }
 

@@ -4,6 +4,7 @@ pub mod import;
 pub mod library;
 pub mod note;
 pub mod person;
+pub mod search;
 pub mod system;
 pub mod tag;
 

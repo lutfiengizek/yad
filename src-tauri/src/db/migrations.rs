@@ -141,6 +141,21 @@ CREATE TABLE note (
 );
 "#;
 
+/// Kütüphane-başına şema, v3 (M3): FTS5 tam-metin arama görünümü.
+///
+/// `file_id` UNINDEXED (saklanır, aranmaz). Türkçe için `remove_diacritics 2`
+/// (diakritik-duyarsız: "deprem" ↔ "déprem"). İçerik dosya + etiket/kişi/not'tan türetilir.
+const LIB_V3: &str = r#"
+CREATE VIRTUAL TABLE file_fts USING fts5(
+    file_id UNINDEXED,
+    name,
+    tags,
+    persons,
+    note,
+    tokenize = 'unicode61 remove_diacritics 2'
+);
+"#;
+
 /// Kütüphane-başına (`<root>/.yad/index.db`) migration'ları sırayla uygular (idempotent).
 pub fn run_library_migrations(conn: &Connection) -> Result<(), AppError> {
     let version: i64 = conn.query_row("PRAGMA user_version", [], |row| row.get(0))?;
@@ -152,6 +167,10 @@ pub fn run_library_migrations(conn: &Connection) -> Result<(), AppError> {
     if version < 2 {
         conn.execute_batch(LIB_V2)?;
         conn.pragma_update(None, "user_version", 2)?;
+    }
+    if version < 3 {
+        conn.execute_batch(LIB_V3)?;
+        conn.pragma_update(None, "user_version", 3)?;
     }
 
     Ok(())

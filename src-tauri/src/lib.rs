@@ -5,6 +5,7 @@ mod error;
 mod fs;
 mod metadata;
 mod models;
+mod search;
 mod state;
 mod volume;
 
@@ -69,6 +70,8 @@ pub fn run() {
             note::note_set,
             note::file_set_rating,
             note::file_set_rating_bulk,
+            commands::search::search,
+            commands::search::search_global,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

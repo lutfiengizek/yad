@@ -1,5 +1,4 @@
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import {
   ResizablePanelGroup,
   ResizablePanel,
@@ -8,25 +7,36 @@ import {
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import { ContentArea } from "@/components/content/content-area";
 import { InspectorPanel } from "@/components/inspector/inspector-panel";
+import { TopBar } from "@/components/shell/top-bar";
+import { StatusBar } from "@/components/shell/status-bar";
+import { useAppStore } from "@/stores/app-store";
 
 function App() {
+  const inspectorOpen = useAppStore((s) => s.inspectorOpen);
+
   return (
-    <TooltipProvider>
-      <SidebarProvider>
-        <AppSidebar />
-        <SidebarInset>
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset className="flex h-svh min-h-0 flex-col">
+        <TopBar />
+        <div className="min-h-0 flex-1">
           <ResizablePanelGroup orientation="horizontal" className="h-full">
             <ResizablePanel defaultSize={70} minSize={40}>
               <ContentArea />
             </ResizablePanel>
-            <ResizableHandle withHandle />
-            <ResizablePanel defaultSize={30} minSize={20}>
-              <InspectorPanel />
-            </ResizablePanel>
+            {inspectorOpen && (
+              <>
+                <ResizableHandle withHandle />
+                <ResizablePanel defaultSize={30} minSize={20}>
+                  <InspectorPanel />
+                </ResizablePanel>
+              </>
+            )}
           </ResizablePanelGroup>
-        </SidebarInset>
-      </SidebarProvider>
-    </TooltipProvider>
+        </div>
+        <StatusBar />
+      </SidebarInset>
+    </SidebarProvider>
   );
 }
 

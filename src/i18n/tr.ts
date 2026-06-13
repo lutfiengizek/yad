@@ -8,6 +8,18 @@ const tr = {
     themeLight: "Açık",
     themeDark: "Koyu",
     themeSystem: "Sistem",
+    search: "Ara",
+    searchShortcut: "Ctrl K",
+    settings: "Ayarlar",
+    profile: "Profil",
+    toggleSidebar: "Kenar çubuğunu aç/kapat",
+    toggleInspector: "Müfettiş panelini aç/kapat",
+  },
+  statusbar: {
+    volumes: "volume",
+    peers: "eş",
+    synced: "Güncel",
+    notifications: "Bildirimler",
   },
   sidebar: {
     search: "Ara",

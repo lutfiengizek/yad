@@ -9,6 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileKindIcon, kindLabel } from "@/components/content/file-kind";
+import { TagSection } from "./tag-section";
 import { t } from "@/i18n";
 import { api } from "@/lib/api";
 import { assetUrl } from "@/lib/asset";
@@ -112,6 +113,10 @@ export function InspectorPanel() {
           </TabsList>
 
           <TabsContent value="detail" className="space-y-4 pt-2">
+            <TagSection file={file} />
+
+            <Separator />
+
             <dl className="space-y-2 text-sm">
               <MetaRow
                 label={t("inspector.added")}

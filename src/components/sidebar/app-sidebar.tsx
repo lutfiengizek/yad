@@ -1,8 +1,10 @@
+import { Fragment } from "react";
 import {
   ClockIcon,
   GalleryVerticalEndIcon,
   HardDriveIcon,
   LayersIcon,
+  TagIcon,
 } from "lucide-react";
 
 import {
@@ -19,9 +21,17 @@ import {
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import { t } from "@/i18n";
-import type { Volume } from "@/lib/api/types";
+import type { Tag, Volume } from "@/lib/api/types";
 import { useFileStore } from "@/stores/file-store";
+import { useTagStore } from "@/stores/tag-store";
 import { useVolumeStore } from "@/stores/volume-store";
+
+function CountBadge({ count }: { count: number }) {
+  if (count <= 0) return null;
+  return (
+    <span className="text-muted-foreground text-xs tabular-nums">{count}</span>
+  );
+}
 
 function VolumeStatusDot({ status }: { status: Volume["status"] }) {
   return (
@@ -44,8 +54,27 @@ function EmptyHint({ label }: { label: string }) {
 
 export function AppSidebar() {
   const volumes = useVolumeStore((s) => s.volumes);
+  const tags = useTagStore((s) => s.tags);
   const activeKey = useFileStore((s) => s.activeKey);
   const selectView = useFileStore((s) => s.selectView);
+
+  const rootTags = tags.filter((tag) => !tag.parentId);
+
+  function TagButton({ tag, child }: { tag: Tag; child?: boolean }) {
+    return (
+      <SidebarMenuItem>
+        <SidebarMenuButton
+          isActive={activeKey === `tag:${tag.id}`}
+          className={cn(child && "pl-6")}
+          onClick={() => selectView(`tag:${tag.id}`, { tagIds: [tag.id] })}
+        >
+          <TagIcon />
+          <span className="flex-1 truncate text-left">{tag.name}</span>
+          <CountBadge count={tag.count} />
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    );
+  }
 
   return (
     <Sidebar>
@@ -106,11 +135,26 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* ETİKETLER — M2 */}
+        {/* ETİKETLER */}
         <SidebarGroup>
           <SidebarGroupLabel>{t("library.sectionTags")}</SidebarGroupLabel>
           <SidebarGroupContent>
-            <EmptyHint label={t("library.noTags")} />
+            {rootTags.length === 0 ? (
+              <EmptyHint label={t("library.noTags")} />
+            ) : (
+              <SidebarMenu>
+                {rootTags.map((tag) => (
+                  <Fragment key={tag.id}>
+                    <TagButton tag={tag} />
+                    {tags
+                      .filter((c) => c.parentId === tag.id)
+                      .map((child) => (
+                        <TagButton key={child.id} tag={child} child />
+                      ))}
+                  </Fragment>
+                ))}
+              </SidebarMenu>
+            )}
           </SidebarGroupContent>
         </SidebarGroup>
 

@@ -135,6 +135,12 @@ const tr = {
     addPerson: "Kişi ekle",
     note: "Not",
     noteEmpty: "Not eklemek için yaz…",
+    create: "Oluştur",
+    remove: "Kaldır",
+    noResults: "Sonuç yok",
+    searchTag: "Etiket ara veya oluştur",
+    searchPerson: "Kişi ara veya oluştur",
+    newPersonName: "Ad Soyad",
   },
   common: {
     save: "Kaydet",

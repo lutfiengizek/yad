@@ -13,6 +13,7 @@ import { CollectionSection } from "./collection-section";
 import { NoteSection } from "./note-section";
 import { PersonSection } from "./person-section";
 import { TagSection } from "./tag-section";
+import { VersionHistory } from "./version-history";
 import { t } from "@/i18n";
 import { api } from "@/lib/api";
 import { assetUrl } from "@/lib/asset";
@@ -172,9 +173,7 @@ export function InspectorPanel() {
           </TabsContent>
 
           <TabsContent value="history" className="pt-2">
-            <p className="text-muted-foreground py-6 text-center text-sm">
-              {t("inspector.historyPlaceholder")}
-            </p>
+            <VersionHistory file={file} />
           </TabsContent>
 
           <TabsContent value="attribution" className="pt-2">

@@ -5,6 +5,7 @@ mod error;
 mod fs;
 mod metadata;
 mod models;
+mod p2p;
 mod search;
 mod state;
 mod volume;

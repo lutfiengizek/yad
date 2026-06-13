@@ -47,14 +47,21 @@
 - [x] M4.3 Aktivite akışı (gruplu, i18n cümleler, geri al); status-bar zili açar.
 - [x] M4.4 Çöp kutusu (geri al / kalıcı sil) + sidebar girişi + Del kısayolu.
 
+## M5 — P2P & İşbirliği ✓
+- [x] M5.1 API collab tipleri (SyncStatus/MemberInfo/Conflict, backend ile birebir) + komutlar + mock + collab store.
+- [x] M5.2 Üyeler paneli (rol/online), davet oluştur (rol+süre→link), davete katıl.
+- [x] M5.3 Senkron popover (alt çubuk) + çatışma çözüm modalı (mine/theirs/merge).
+- [x] M5.4 Viewer salt-okunur gating; entegrasyon cilası: rename/reveal/source-url/profil (kullanılmayan komutlar bağlandı).
+
 ## Tasarım cilası (kullanıcı geri bildirimi)
 Sidebar/topbar/statusbar/inspector tutarlılığı: etkileşimsiz metin butona sarılmaz,
 placeholder'lar temiz, çalışma alanı aktif kütüphane adını gösterir. Token-tabanlı,
 hardcoded renk yok.
 
 ## Durum
-M0+M1+M2+M3+M4 tamam: 50 test geçer, `tsc`/`pnpm build` temiz. Tümü mock üzerinde çalışır
-(`VITE_USE_MOCK` varsayılan; onboarding'i görmek için `VITE_MOCK_EMPTY=true`).
+M0–M5 tamam: 56 test geçer, `tsc`/`pnpm build` temiz. Tüm M0–M5 backend komutları FE'de bağlı.
+Tarayıcıda mock; Tauri içinde otomatik gerçek `invoke` (`shouldUseMock` Tauri'yi algılar).
+`VITE_USE_MOCK=false`/`true` ile zorla; onboarding'i görmek için `VITE_MOCK_EMPTY=true`.
 Görsel açık/koyu tema piksel kontrolü çalışan uygulamada elle doğrulanmalı
 (tarayıcı otomasyonu yok; tüm bileşenler token-tabanlı → yapısal olarak tema-uyumlu).
 

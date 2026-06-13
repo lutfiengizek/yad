@@ -35,6 +35,20 @@ export const clientApi: Api = {
   identityGet: () => call("identity_get"),
   identitySet: (input) => call("identity_set", { input }),
 
+  libraryList: () => call("library_list"),
+  libraryCreate: (input) => call("library_create", { input }),
+  libraryOpen: (id) => call("library_open", { id }),
+  volumeList: (libraryId) => call("volume_list", { libraryId }),
+  volumeRescan: (volumeId) => call("volume_rescan", { volumeId }),
+  importFiles: (input) => call("import_files", { input }),
+  importFromClipboard: (input) => call("import_from_clipboard", { input }),
+  fileList: (query) => call("file_list", { query }),
+  fileGet: (id) => call("file_get", { id }),
+  fileRename: (input) => call("file_rename", { input }),
+  fileSetSourceUrl: (input) => call("file_set_source_url", { input }),
+  fileOpenExternal: (id) => call("file_open_external", { id }),
+  fileRevealInOs: (id) => call("file_reveal_in_os", { id }),
+
   onImportProgress: (cb) => tauriListen("import:progress", cb),
   onVolumeChanged: (cb) => tauriListen("volume:changed", cb),
 };

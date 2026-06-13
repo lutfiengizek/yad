@@ -4,9 +4,16 @@
 
 import type {
   AppInitResult,
+  BatchHandle,
+  FileItem,
   Identity,
   IdentityInput,
+  ImportFilesInput,
   ImportProgress,
+  Library,
+  LibraryCreateInput,
+  Page,
+  SearchQuery,
   Settings,
   Volume,
 } from "./types";
@@ -20,6 +27,21 @@ export interface Api {
   settingsSet(patch: Partial<Settings>): Promise<Settings>;
   identityGet(): Promise<Identity | null>;
   identitySet(input: IdentityInput): Promise<Identity>;
+
+  // M1 — kütüphane, volume, içe aktarma, dosya listeleme
+  libraryList(): Promise<Library[]>;
+  libraryCreate(input: LibraryCreateInput): Promise<Library>;
+  libraryOpen(id: string): Promise<Library>;
+  volumeList(libraryId: string): Promise<Volume[]>;
+  volumeRescan(volumeId: string): Promise<Volume>;
+  importFiles(input: ImportFilesInput): Promise<BatchHandle>;
+  importFromClipboard(input: { libraryId: string }): Promise<BatchHandle>;
+  fileList(query: SearchQuery): Promise<Page<FileItem>>;
+  fileGet(id: string): Promise<FileItem>;
+  fileRename(input: { id: string; newName: string }): Promise<FileItem>;
+  fileSetSourceUrl(input: { id: string; url: string }): Promise<FileItem>;
+  fileOpenExternal(id: string): Promise<void>;
+  fileRevealInOs(id: string): Promise<void>;
 
   // Events (backend emit → frontend listen) — payload tipleri sözleşmeden.
   onImportProgress(cb: (p: ImportProgress) => void): Unsubscribe;

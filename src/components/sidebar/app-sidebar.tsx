@@ -7,6 +7,7 @@ import {
   LayersIcon,
   PlusIcon,
   TagIcon,
+  Trash2Icon,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -266,6 +267,22 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        {/* ÇÖP KUTUSU */}
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={route.name === "trash"}
+                  onClick={() => setRoute({ name: "trash" })}
+                >
+                  <Trash2Icon />
+                  <span>{t("trash.sidebar")}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

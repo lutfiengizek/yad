@@ -132,6 +132,19 @@ const tr = {
     prev: "Önceki",
     next: "Sonraki",
   },
+  trash: {
+    title: "Çöp Kutusu",
+    sidebar: "Çöp Kutusu",
+    empty: "Çöp kutusu boş.",
+    restore: "Seçilenleri geri al",
+    deletePermanent: "Kalıcı sil",
+    retention: "{days} gün sonra kalıcı silinir",
+    selected: "seçili",
+    confirmTitle: "Kalıcı silinsin mi?",
+    confirmBody:
+      "Bu işlem geri alınamaz. Seçilen dosyalar, sürümleri ve metadata kalıcı silinir.",
+    movedToast: "Çöpe taşındı",
+  },
   activity: {
     title: "Aktivite",
     today: "BUGÜN",

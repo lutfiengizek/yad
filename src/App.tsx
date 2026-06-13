@@ -8,6 +8,7 @@ import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import { ContentArea } from "@/components/content/content-area";
 import { PersonDetailPage } from "@/components/person/person-detail-page";
 import { ActivityFeedPage } from "@/components/activity/activity-feed-page";
+import { TrashPage } from "@/components/trash/trash-page";
 import { InspectorPanel } from "@/components/inspector/inspector-panel";
 import { TopBar } from "@/components/shell/top-bar";
 import { StatusBar } from "@/components/shell/status-bar";
@@ -40,6 +41,8 @@ function App() {
                   <PersonDetailPage personId={route.personId} />
                 ) : route.name === "activity" ? (
                   <ActivityFeedPage />
+                ) : route.name === "trash" ? (
+                  <TrashPage />
                 ) : (
                   <ContentArea />
                 )}

@@ -2,9 +2,13 @@
 // (Space → önizleme QuickPreview'da.) Metin girişi/dialog/komut açıkken devre dışı.
 
 import { useEffect } from "react";
+import { toast } from "sonner";
 
+import { t } from "@/i18n";
 import { isEditableTarget } from "@/lib/dom";
 import { useAppStore } from "@/stores/app-store";
+import { useFileStore } from "@/stores/file-store";
+import { useTrashStore } from "@/stores/trash-store";
 
 export function useKeyboardShortcuts() {
   useEffect(() => {
@@ -14,6 +18,24 @@ export function useKeyboardShortcuts() {
       if (app.route.name !== "files") return;
       if (isEditableTarget(e.target)) return;
       if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+      if (e.key === "Delete") {
+        const id = useFileStore.getState().selectedId;
+        if (!id) return;
+        e.preventDefault();
+        void useFileStore
+          .getState()
+          .moveToTrash([id])
+          .then(() => {
+            toast.success(t("trash.movedToast"), {
+              action: {
+                label: t("activity.undo"),
+                onClick: () => void useTrashStore.getState().restore([id]),
+              },
+            });
+          });
+        return;
+      }
 
       switch (e.key.toLowerCase()) {
         case "g":

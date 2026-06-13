@@ -5,14 +5,17 @@ import {
   GalleryVerticalEndIcon,
   HardDriveIcon,
   LayersIcon,
+  PlusIcon,
   TagIcon,
 } from "lucide-react";
 
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
+  SidebarGroupAction,
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarHeader,
@@ -20,11 +23,15 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { PersonFormDialog } from "@/components/person/person-form-dialog";
 import { cn } from "@/lib/utils";
 import { t } from "@/i18n";
-import type { Tag, Volume } from "@/lib/api/types";
+import type { SearchQuery, Tag, Volume } from "@/lib/api/types";
+import { initials } from "@/lib/person";
+import { useAppStore } from "@/stores/app-store";
 import { useCollectionStore } from "@/stores/collection-store";
 import { useFileStore } from "@/stores/file-store";
+import { usePersonStore } from "@/stores/person-store";
 import { useTagStore } from "@/stores/tag-store";
 import { useVolumeStore } from "@/stores/volume-store";
 import { CreateCollectionDialog } from "./create-collection-dialog";
@@ -59,18 +66,29 @@ export function AppSidebar() {
   const volumes = useVolumeStore((s) => s.volumes);
   const tags = useTagStore((s) => s.tags);
   const collections = useCollectionStore((s) => s.collections);
+  const persons = usePersonStore((s) => s.persons);
   const activeKey = useFileStore((s) => s.activeKey);
   const selectView = useFileStore((s) => s.selectView);
+  const route = useAppStore((s) => s.route);
+  const setRoute = useAppStore((s) => s.setRoute);
 
   const rootTags = tags.filter((tag) => !tag.parentId);
+
+  // Dosya görünümüne dön (kişi sayfasından çık) + sorguyu uygula.
+  function openFiles(key: string, query: SearchQuery) {
+    setRoute({ name: "files" });
+    void selectView(key, query);
+  }
+
+  const isFiles = route.name === "files";
 
   function TagButton({ tag, child }: { tag: Tag; child?: boolean }) {
     return (
       <SidebarMenuItem>
         <SidebarMenuButton
-          isActive={activeKey === `tag:${tag.id}`}
+          isActive={isFiles && activeKey === `tag:${tag.id}`}
           className={cn(child && "pl-6")}
-          onClick={() => selectView(`tag:${tag.id}`, { tagIds: [tag.id] })}
+          onClick={() => openFiles(`tag:${tag.id}`, { tagIds: [tag.id] })}
         >
           <TagIcon />
           <span className="flex-1 truncate text-left">{tag.name}</span>
@@ -104,8 +122,8 @@ export function AppSidebar() {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  isActive={activeKey === "all"}
-                  onClick={() => selectView("all", {})}
+                  isActive={isFiles && activeKey === "all"}
+                  onClick={() => openFiles("all", {})}
                 >
                   <LayersIcon />
                   <span>{t("library.all")}</span>
@@ -113,9 +131,9 @@ export function AppSidebar() {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  isActive={activeKey === "recent"}
+                  isActive={isFiles && activeKey === "recent"}
                   onClick={() =>
-                    selectView("recent", {
+                    openFiles("recent", {
                       sortBy: "addedAt",
                       sortDir: "desc",
                     })
@@ -143,9 +161,9 @@ export function AppSidebar() {
                 {collections.map((c) => (
                   <SidebarMenuItem key={c.id}>
                     <SidebarMenuButton
-                      isActive={activeKey === `col:${c.id}`}
+                      isActive={isFiles && activeKey === `col:${c.id}`}
                       onClick={() =>
-                        selectView(`col:${c.id}`, { collectionId: c.id })
+                        openFiles(`col:${c.id}`, { collectionId: c.id })
                       }
                     >
                       <FolderIcon />
@@ -184,11 +202,45 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* KİŞİLER — M2 */}
+        {/* KİŞİLER */}
         <SidebarGroup>
           <SidebarGroupLabel>{t("library.sectionPersons")}</SidebarGroupLabel>
+          <PersonFormDialog
+            trigger={
+              <SidebarGroupAction title={t("library.addPerson")}>
+                <PlusIcon />
+              </SidebarGroupAction>
+            }
+          />
           <SidebarGroupContent>
-            <EmptyHint label={t("library.noPersons")} />
+            {persons.length === 0 ? (
+              <EmptyHint label={t("library.noPersons")} />
+            ) : (
+              <SidebarMenu>
+                {persons.map((p) => (
+                  <SidebarMenuItem key={p.id}>
+                    <SidebarMenuButton
+                      isActive={
+                        route.name === "person" && route.personId === p.id
+                      }
+                      onClick={() =>
+                        setRoute({ name: "person", personId: p.id })
+                      }
+                    >
+                      <Avatar className="size-5">
+                        <AvatarFallback className="text-[9px]">
+                          {initials(p.fullName)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="flex-1 truncate text-left">
+                        {p.fullName}
+                      </span>
+                      <CountBadge count={p.fileCount} />
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            )}
           </SidebarGroupContent>
         </SidebarGroup>
 
@@ -200,10 +252,10 @@ export function AppSidebar() {
               {volumes.map((vol) => (
                 <SidebarMenuItem key={vol.id}>
                   <SidebarMenuButton
-                    isActive={activeKey === `vol:${vol.id}`}
+                    isActive={isFiles && activeKey === `vol:${vol.id}`}
                     className={cn(vol.status === "offline" && "opacity-60")}
                     onClick={() =>
-                      selectView(`vol:${vol.id}`, { volumeId: vol.id })
+                      openFiles(`vol:${vol.id}`, { volumeId: vol.id })
                     }
                   >
                     <HardDriveIcon />

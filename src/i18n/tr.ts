@@ -115,6 +115,16 @@ const tr = {
     dragDropHint: "Dosyaları buraya sürükleyin",
     noFiles: "Bu klasörde dosya yok",
   },
+  person: {
+    fullName: "Ad Soyad",
+    title: "Unvan",
+    organization: "Kurum",
+    email: "E-posta",
+    phone: "Telefon",
+    edit: "Kişiyi düzenle",
+    new: "Yeni kişi",
+    save: "Kaydet",
+  },
   inspector: {
     preview: "Önizleme",
     tags: "Etiketler",

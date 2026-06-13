@@ -6,6 +6,7 @@ import {
 } from "@/components/ui/resizable";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import { ContentArea } from "@/components/content/content-area";
+import { PersonDetailPage } from "@/components/person/person-detail-page";
 import { InspectorPanel } from "@/components/inspector/inspector-panel";
 import { TopBar } from "@/components/shell/top-bar";
 import { StatusBar } from "@/components/shell/status-bar";
@@ -18,6 +19,7 @@ import { useBootstrap } from "@/hooks/use-bootstrap";
 
 function App() {
   const inspectorOpen = useAppStore((s) => s.inspectorOpen);
+  const route = useAppStore((s) => s.route);
   useBootstrap();
 
   return (
@@ -29,7 +31,11 @@ function App() {
           <div className="min-h-0 flex-1">
             <ResizablePanelGroup orientation="horizontal" className="h-full">
               <ResizablePanel defaultSize={70} minSize={40}>
-                <ContentArea />
+                {route.name === "person" ? (
+                  <PersonDetailPage personId={route.personId} />
+                ) : (
+                  <ContentArea />
+                )}
               </ResizablePanel>
               {inspectorOpen && (
                 <>

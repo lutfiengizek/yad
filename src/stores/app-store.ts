@@ -1,19 +1,22 @@
 import { create } from "zustand";
 
+// Merkez panelde ne gösterildiği: dosya listesi ya da kişi kartı detayı.
+export type Route = { name: "files" } | { name: "person"; personId: string };
+
 interface AppState {
   sidebarOpen: boolean;
   inspectorOpen: boolean;
-  activePanel: "files" | "search" | "tags" | "persons";
+  route: Route;
   setSidebarOpen: (open: boolean) => void;
   setInspectorOpen: (open: boolean) => void;
-  setActivePanel: (panel: AppState["activePanel"]) => void;
+  setRoute: (route: Route) => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
   sidebarOpen: true,
   inspectorOpen: true,
-  activePanel: "files",
+  route: { name: "files" },
   setSidebarOpen: (open) => set({ sidebarOpen: open }),
   setInspectorOpen: (open) => set({ inspectorOpen: open }),
-  setActivePanel: (panel) => set({ activePanel: panel }),
+  setRoute: (route) => set({ route }),
 }));

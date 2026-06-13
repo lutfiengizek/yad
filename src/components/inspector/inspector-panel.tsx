@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileKindIcon, kindLabel } from "@/components/content/file-kind";
 import { CollectionSection } from "./collection-section";
+import { PersonSection } from "./person-section";
 import { TagSection } from "./tag-section";
 import { t } from "@/i18n";
 import { api } from "@/lib/api";
@@ -115,6 +116,7 @@ export function InspectorPanel() {
 
           <TabsContent value="detail" className="space-y-4 pt-2">
             <TagSection file={file} />
+            <PersonSection file={file} />
             <CollectionSection file={file} />
 
             <Separator />

@@ -16,6 +16,7 @@ import { OnboardingWizard } from "@/components/onboarding/onboarding-wizard";
 import { CommandPalette } from "@/components/shell/command-palette";
 import { MembersDialog } from "@/components/collab/members-dialog";
 import { JoinDialog } from "@/components/collab/join-dialog";
+import { ConflictModal } from "@/components/collab/conflict-modal";
 import { QuickPreview } from "@/components/content/quick-preview";
 import { ImportQueue } from "@/components/content/import-queue";
 import { DropOverlay } from "@/components/content/drop-overlay";
@@ -66,6 +67,7 @@ function App() {
       <CommandPalette />
       <MembersDialog />
       <JoinDialog />
+      <ConflictModal />
       <QuickPreview />
       <DropOverlay />
       <ImportQueue />

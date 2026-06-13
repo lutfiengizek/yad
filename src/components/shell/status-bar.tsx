@@ -1,16 +1,20 @@
-// Alt durum çubuğu: volume/eş/senkron/sürüm/bildirim göstergeleri.
-// Volume sayısı gerçek veriden; bildirim zili aktivite akışını açar; eş/senkron M5'te.
+// Alt durum çubuğu: volume/eş/senkron(popover)/çatışma/sürüm/bildirim göstergeleri.
 
-import { BellIcon, HardDriveIcon, RefreshCwIcon, UsersIcon } from "lucide-react";
+import { BellIcon, HardDriveIcon, TriangleAlertIcon, UsersIcon } from "lucide-react";
 
+import { SyncPopover } from "@/components/collab/sync-popover";
 import { Button } from "@/components/ui/button";
 import { t } from "@/i18n";
 import { useAppStore } from "@/stores/app-store";
+import { useCollabStore } from "@/stores/collab-store";
 import { useVolumeStore } from "@/stores/volume-store";
 
 export function StatusBar() {
   const volumes = useVolumeStore((s) => s.volumes);
   const setRoute = useAppStore((s) => s.setRoute);
+  const setConflictOpen = useAppStore((s) => s.setConflictOpen);
+  const sync = useCollabStore((s) => s.sync);
+  const conflicts = useCollabStore((s) => s.conflicts);
   const connected = volumes.filter((v) => v.status === "connected").length;
 
   return (
@@ -24,12 +28,24 @@ export function StatusBar() {
       </span>
       <span className="flex items-center gap-1.5">
         <UsersIcon className="size-3.5" />
-        <span className="tabular-nums">0</span> {t("statusbar.peers")}
+        <span className="tabular-nums">{sync?.peersOnline ?? 0}</span>{" "}
+        {t("statusbar.peers")}
       </span>
-      <span className="flex items-center gap-1.5">
-        <RefreshCwIcon className="size-3.5" />
-        {t("statusbar.synced")}
-      </span>
+
+      <SyncPopover />
+
+      {conflicts.length > 0 && (
+        <button
+          type="button"
+          onClick={() => setConflictOpen(true)}
+          className="text-destructive flex items-center gap-1.5 font-medium"
+        >
+          <TriangleAlertIcon className="size-3.5" />
+          <span className="tabular-nums">{conflicts.length}</span>{" "}
+          {t("collab.conflictBadge")}
+        </button>
+      )}
+
       <span className="ml-auto">{t("app.version")}</span>
       <Button
         variant="ghost"

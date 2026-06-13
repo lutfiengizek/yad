@@ -13,7 +13,9 @@ describe("App shell", () => {
     // Üst bar kontrolleri (erişilebilir etiketlerle benzersiz)
     expect(screen.getByRole("button", { name: "Tema" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Ayarlar" })).toBeInTheDocument();
-    // Alt durum çubuğu
-    expect(screen.getByText("Güncel")).toBeInTheDocument();
+    // Alt durum çubuğu (bildirim düğmesi)
+    expect(
+      screen.getByRole("button", { name: "Bildirimler" }),
+    ).toBeInTheDocument();
   });
 });

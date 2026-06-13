@@ -10,6 +10,7 @@ import type {
   Role,
   SyncStatus,
 } from "@/lib/api/types";
+import { useFileStore } from "./file-store";
 
 interface CollabState {
   members: MemberInfo[];
@@ -66,7 +67,11 @@ export const useCollabStore = create<CollabState>((set, get) => ({
   },
   resolveConflict: async (input) => {
     await api.conflictResolve(input);
-    set({ conflicts: await api.conflictList() });
+    const [conflicts] = await Promise.all([
+      api.conflictList(),
+      useFileStore.getState().reload(),
+    ]);
+    set({ conflicts });
   },
   setSync: (sync) => set({ sync }),
   addConflict: (conflict) =>

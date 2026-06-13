@@ -5,16 +5,23 @@
 import type {
   AppInitResult,
   BatchHandle,
+  Collection,
   FileItem,
+  Id,
   Identity,
   IdentityInput,
   ImportFilesInput,
   ImportProgress,
   Library,
   LibraryCreateInput,
+  NoteDoc,
   Page,
+  Person,
+  PersonInput,
   SearchQuery,
   Settings,
+  Tag,
+  TagType,
   Volume,
 } from "./types";
 
@@ -42,6 +49,55 @@ export interface Api {
   fileSetSourceUrl(input: { id: string; url: string }): Promise<FileItem>;
   fileOpenExternal(id: string): Promise<void>;
   fileRevealInOs(id: string): Promise<void>;
+
+  // M2 — organizasyon (etiket, koleksiyon, kişi, not, rating)
+  tagList(): Promise<Tag[]>;
+  tagCreate(input: {
+    name: string;
+    type: TagType;
+    parentId?: Id;
+    color?: string;
+  }): Promise<Tag>;
+  tagRename(input: { id: Id; name: string }): Promise<Tag>;
+  tagDelete(id: Id): Promise<void>;
+  tagAssign(input: {
+    fileIds: Id[];
+    tagId: Id;
+    applyToChildren?: boolean;
+  }): Promise<void>;
+  tagUnassign(input: { fileIds: Id[]; tagId: Id }): Promise<void>;
+  tagSuggest(fileId: Id): Promise<Tag[]>;
+
+  collectionList(): Promise<Collection[]>;
+  collectionCreate(input: {
+    name: string;
+    parentId?: Id;
+    icon?: string;
+  }): Promise<Collection>;
+  collectionRename(input: { id: Id; name: string }): Promise<Collection>;
+  collectionDelete(id: Id): Promise<void>;
+  collectionAddFiles(input: {
+    collectionId: Id;
+    fileIds: Id[];
+  }): Promise<void>;
+  collectionRemoveFiles(input: {
+    collectionId: Id;
+    fileIds: Id[];
+  }): Promise<void>;
+
+  personList(): Promise<Person[]>;
+  personGet(id: Id): Promise<Person>;
+  personCreate(input: PersonInput): Promise<Person>;
+  personUpdate(input: { id: Id } & Partial<PersonInput>): Promise<Person>;
+  personDelete(id: Id): Promise<void>;
+  personLink(input: { fileIds: Id[]; personId: Id }): Promise<void>;
+  personUnlink(input: { fileIds: Id[]; personId: Id }): Promise<void>;
+
+  noteGet(fileId: Id): Promise<NoteDoc | null>;
+  noteSet(input: { fileId: Id; contentJson: string }): Promise<NoteDoc>;
+
+  fileSetRating(input: { id: Id; rating: number }): Promise<FileItem>;
+  fileSetRatingBulk(input: { ids: Id[]; rating: number }): Promise<void>;
 
   // Events (backend emit → frontend listen) — payload tipleri sözleşmeden.
   onImportProgress(cb: (p: ImportProgress) => void): Unsubscribe;

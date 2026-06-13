@@ -7,18 +7,26 @@ import { MockEventBus } from "./events";
 import {
   NOW,
   defaultSettings,
+  sampleCollections,
   sampleFiles,
   sampleIdentity,
   sampleLibrary,
+  sampleNotes,
+  samplePersons,
+  sampleTags,
   sampleVolumes,
 } from "./mock-fixtures";
 import type {
+  Collection,
   FileItem,
   FileKind,
   Identity,
   ImportFilesInput,
   Library,
+  NoteDoc,
+  Person,
   Settings,
+  Tag,
   Volume,
 } from "./types";
 
@@ -54,8 +62,20 @@ class MockState {
   libraries: Library[] = START_EMPTY ? [] : [clone(sampleLibrary)];
   volumes: Volume[] = START_EMPTY ? [] : clone(sampleVolumes);
   files: FileItem[] = START_EMPTY ? [] : clone(sampleFiles);
+  tags: Tag[] = START_EMPTY ? [] : clone(sampleTags);
+  collections: Collection[] = START_EMPTY ? [] : clone(sampleCollections);
+  persons: Person[] = START_EMPTY ? [] : clone(samplePersons);
+  notes: NoteDoc[] = START_EMPTY ? [] : clone(sampleNotes);
   bus = new MockEventBus();
-  counters = { library: 1, volume: 2, batch: 0, file: sampleFiles.length };
+  counters = {
+    library: 1,
+    volume: 2,
+    batch: 0,
+    file: sampleFiles.length,
+    tag: 0,
+    collection: 0,
+    person: 0,
+  };
 }
 
 // Modül ömrü boyunca tek durum (gerçek backend gibi kalıcı davranır).
@@ -67,6 +87,26 @@ function findFile(id: string): FileItem {
     throw { code: "not_found", message: `Dosya bulunamadı: ${id}` };
   }
   return found;
+}
+
+// count alanları dosyalardan türetilir (atama değişince güncel kalır).
+function tagWithCount(tag: Tag): Tag {
+  return {
+    ...tag,
+    count: state.files.filter((f) => f.tagIds.includes(tag.id)).length,
+  };
+}
+function collectionWithCount(c: Collection): Collection {
+  return {
+    ...c,
+    count: state.files.filter((f) => f.collectionIds.includes(c.id)).length,
+  };
+}
+function personWithCount(p: Person): Person {
+  return {
+    ...p,
+    fileCount: state.files.filter((f) => f.personIds.includes(p.id)).length,
+  };
 }
 
 // İçe aktarma ilerlemesini kademeli simüle eder; bitince dosyaları ekler.
@@ -256,6 +296,214 @@ export const mockApi: Api = {
 
   fileOpenExternal: () => delay(undefined),
   fileRevealInOs: () => delay(undefined),
+
+  // --- M2: etiketler ---
+  tagList: () => delay(state.tags.map(tagWithCount)),
+
+  tagCreate: (input) => {
+    const tag: Tag = {
+      id: `tag-new-${++state.counters.tag}`,
+      name: input.name,
+      type: input.type,
+      parentId: input.parentId,
+      color: input.color,
+      count: 0,
+    };
+    state.tags.push(tag);
+    return delay(clone(tag));
+  },
+
+  tagRename: ({ id, name }) => {
+    const tag = state.tags.find((t) => t.id === id);
+    if (!tag) throw { code: "not_found", message: `Etiket bulunamadı: ${id}` };
+    tag.name = name;
+    return delay(tagWithCount(tag));
+  },
+
+  tagDelete: (id) => {
+    state.tags = state.tags.filter((t) => t.id !== id);
+    state.files.forEach((f) => {
+      f.tagIds = f.tagIds.filter((t) => t !== id);
+    });
+    return delay(undefined);
+  },
+
+  tagAssign: ({ fileIds, tagId }) => {
+    state.files.forEach((f) => {
+      if (fileIds.includes(f.id) && !f.tagIds.includes(tagId)) {
+        f.tagIds.push(tagId);
+        f.modifiedAt = NOW;
+      }
+    });
+    return delay(undefined);
+  },
+
+  tagUnassign: ({ fileIds, tagId }) => {
+    state.files.forEach((f) => {
+      if (fileIds.includes(f.id)) {
+        f.tagIds = f.tagIds.filter((t) => t !== tagId);
+        f.modifiedAt = NOW;
+      }
+    });
+    return delay(undefined);
+  },
+
+  tagSuggest: (fileId) => {
+    const file = state.files.find((f) => f.id === fileId);
+    const assigned = new Set(file?.tagIds ?? []);
+    const suggestions = state.tags
+      .filter((t) => !assigned.has(t.id))
+      .slice(0, 9)
+      .map(tagWithCount);
+    return delay(suggestions);
+  },
+
+  // --- M2: koleksiyonlar ---
+  collectionList: () => delay(state.collections.map(collectionWithCount)),
+
+  collectionCreate: (input) => {
+    const collection: Collection = {
+      id: `col-new-${++state.counters.collection}`,
+      name: input.name,
+      parentId: input.parentId,
+      icon: input.icon,
+      count: 0,
+    };
+    state.collections.push(collection);
+    return delay(clone(collection));
+  },
+
+  collectionRename: ({ id, name }) => {
+    const c = state.collections.find((x) => x.id === id);
+    if (!c) throw { code: "not_found", message: `Koleksiyon bulunamadı: ${id}` };
+    c.name = name;
+    return delay(collectionWithCount(c));
+  },
+
+  collectionDelete: (id) => {
+    state.collections = state.collections.filter((c) => c.id !== id);
+    state.files.forEach((f) => {
+      f.collectionIds = f.collectionIds.filter((c) => c !== id);
+    });
+    return delay(undefined);
+  },
+
+  collectionAddFiles: ({ collectionId, fileIds }) => {
+    state.files.forEach((f) => {
+      if (fileIds.includes(f.id) && !f.collectionIds.includes(collectionId)) {
+        f.collectionIds.push(collectionId);
+        f.modifiedAt = NOW;
+      }
+    });
+    return delay(undefined);
+  },
+
+  collectionRemoveFiles: ({ collectionId, fileIds }) => {
+    state.files.forEach((f) => {
+      if (fileIds.includes(f.id)) {
+        f.collectionIds = f.collectionIds.filter((c) => c !== collectionId);
+        f.modifiedAt = NOW;
+      }
+    });
+    return delay(undefined);
+  },
+
+  // --- M2: kişiler ---
+  personList: () => delay(state.persons.map(personWithCount)),
+
+  personGet: (id) => {
+    const p = state.persons.find((x) => x.id === id);
+    if (!p) throw { code: "not_found", message: `Kişi bulunamadı: ${id}` };
+    return delay(personWithCount(p));
+  },
+
+  personCreate: (input) => {
+    const person: Person = {
+      id: `person-new-${++state.counters.person}`,
+      ...input,
+      fileCount: 0,
+    };
+    state.persons.push(person);
+    return delay(clone(person));
+  },
+
+  personUpdate: ({ id, ...patch }) => {
+    const p = state.persons.find((x) => x.id === id);
+    if (!p) throw { code: "not_found", message: `Kişi bulunamadı: ${id}` };
+    Object.assign(p, patch);
+    return delay(personWithCount(p));
+  },
+
+  personDelete: (id) => {
+    state.persons = state.persons.filter((p) => p.id !== id);
+    state.files.forEach((f) => {
+      f.personIds = f.personIds.filter((p) => p !== id);
+    });
+    return delay(undefined);
+  },
+
+  personLink: ({ fileIds, personId }) => {
+    state.files.forEach((f) => {
+      if (fileIds.includes(f.id) && !f.personIds.includes(personId)) {
+        f.personIds.push(personId);
+        f.modifiedAt = NOW;
+      }
+    });
+    return delay(undefined);
+  },
+
+  personUnlink: ({ fileIds, personId }) => {
+    state.files.forEach((f) => {
+      if (fileIds.includes(f.id)) {
+        f.personIds = f.personIds.filter((p) => p !== personId);
+        f.modifiedAt = NOW;
+      }
+    });
+    return delay(undefined);
+  },
+
+  // --- M2: notlar ---
+  noteGet: (fileId) => {
+    const note = state.notes.find((n) => n.fileId === fileId);
+    return delay(note ? clone(note) : null);
+  },
+
+  noteSet: ({ fileId, contentJson }) => {
+    let note = state.notes.find((n) => n.fileId === fileId);
+    if (note) {
+      note.contentJson = contentJson;
+      note.updatedAt = NOW;
+    } else {
+      note = {
+        fileId,
+        contentJson,
+        updatedAt: NOW,
+        updatedBy: state.identity?.id ?? "person-self",
+      };
+      state.notes.push(note);
+    }
+    const file = state.files.find((f) => f.id === fileId);
+    if (file) file.hasNote = true;
+    return delay(clone(note));
+  },
+
+  // --- M2: rating ---
+  fileSetRating: ({ id, rating }) => {
+    const f = findFile(id);
+    f.rating = rating;
+    f.modifiedAt = NOW;
+    return delay(clone(f));
+  },
+
+  fileSetRatingBulk: ({ ids, rating }) => {
+    state.files.forEach((f) => {
+      if (ids.includes(f.id)) {
+        f.rating = rating;
+        f.modifiedAt = NOW;
+      }
+    });
+    return delay(undefined);
+  },
 
   // --- Events ---
   onImportProgress: (cb) => state.bus.on("import:progress", cb),

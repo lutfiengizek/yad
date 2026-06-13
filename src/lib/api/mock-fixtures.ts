@@ -2,10 +2,14 @@
 // Milestone ilerledikçe genişler (M1: volume/dosya fixture'ları).
 
 import type {
+  Collection,
   FileItem,
   Identity,
   Library,
+  NoteDoc,
+  Person,
   Settings,
+  Tag,
   Volume,
 } from "./types";
 
@@ -78,9 +82,9 @@ function file(partial: Partial<FileItem> & Pick<FileItem, "id" | "name" | "kind"
 }
 
 export const sampleFiles: FileItem[] = [
-  file({ id: "f-1", name: "deprem-saha-01.jpg", kind: "image", ext: "jpg", mime: "image/jpeg", rating: 5, hasNote: true }),
-  file({ id: "f-2", name: "deprem-saha-02.jpg", kind: "image", ext: "jpg", mime: "image/jpeg", rating: 4 }),
-  file({ id: "f-3", name: "roportaj-meclis.mp4", kind: "video", ext: "mp4", mime: "video/mp4", sizeBytes: 84_000_000, rating: 3 }),
+  file({ id: "f-1", name: "deprem-saha-01.jpg", kind: "image", ext: "jpg", mime: "image/jpeg", rating: 5, hasNote: true, tagIds: ["tag-deprem", "tag-ankara", "tag-acil"], personIds: ["person-ahmet"], collectionIds: ["col-deprem"] }),
+  file({ id: "f-2", name: "deprem-saha-02.jpg", kind: "image", ext: "jpg", mime: "image/jpeg", rating: 4, tagIds: ["tag-deprem", "tag-ankara"], collectionIds: ["col-deprem"] }),
+  file({ id: "f-3", name: "roportaj-meclis.mp4", kind: "video", ext: "mp4", mime: "video/mp4", sizeBytes: 84_000_000, rating: 3, tagIds: ["tag-tbmm"], personIds: ["person-ahmet", "person-ayse"] }),
   file({ id: "f-4", name: "ses-kaydi-tanik.m4a", kind: "audio", ext: "m4a", mime: "audio/mp4", sizeBytes: 5_400_000 }),
   file({ id: "f-5", name: "rapor-2026.pdf", kind: "document", ext: "pdf", mime: "application/pdf", sizeBytes: 320_000, hasNote: true }),
   file({ id: "f-6", name: "bilgi-notu.txt", kind: "document", ext: "txt", mime: "text/plain", sizeBytes: 4_200 }),
@@ -96,4 +100,55 @@ export const sampleFiles: FileItem[] = [
     isAvailable: false,
     rating: 2,
   }),
+];
+
+// count alanları mock'ta dosyalardan hesaplanır; burada 0 bırakılır.
+export const sampleTags: Tag[] = [
+  { id: "tag-ankara", name: "Ankara", type: "place", count: 0 },
+  { id: "tag-tbmm", name: "TBMM", type: "place", parentId: "tag-ankara", count: 0 },
+  { id: "tag-2026", name: "2026", type: "time", count: 0 },
+  { id: "tag-deprem", name: "Deprem", type: "event", count: 0 },
+  { id: "tag-acil", name: "Acil", type: "free", color: "chart-1", count: 0 },
+];
+
+export const sampleCollections: Collection[] = [
+  { id: "col-deprem", name: "Deprem Dosyası", icon: "folder", count: 0 },
+  { id: "col-manset", name: "Manşetler", icon: "newspaper", count: 0 },
+];
+
+export const samplePersons: Person[] = [
+  {
+    id: "person-ahmet",
+    fullName: "Ahmet Yılmaz",
+    title: "Genel Yayın Yönetmeni",
+    organization: "Gazete X",
+    email: "ahmet@gazetex.example",
+    fileCount: 0,
+  },
+  {
+    id: "person-ayse",
+    fullName: "Ayşe Demir",
+    title: "Saha Muhabiri",
+    organization: "Gazete X",
+    fileCount: 0,
+  },
+];
+
+export const sampleNotes: NoteDoc[] = [
+  {
+    fileId: "f-1",
+    contentJson: JSON.stringify({
+      type: "doc",
+      content: [
+        {
+          type: "paragraph",
+          content: [
+            { type: "text", text: "Saha ekibinden gelen ilk kare. Doğrulandı." },
+          ],
+        },
+      ],
+    }),
+    updatedAt: NOW,
+    updatedBy: "person-self",
+  },
 ];

@@ -49,6 +49,35 @@ export const clientApi: Api = {
   fileOpenExternal: (id) => call("file_open_external", { id }),
   fileRevealInOs: (id) => call("file_reveal_in_os", { id }),
 
+  tagList: () => call("tag_list"),
+  tagCreate: (input) => call("tag_create", { input }),
+  tagRename: (input) => call("tag_rename", { input }),
+  tagDelete: (id) => call("tag_delete", { id }),
+  tagAssign: (input) => call("tag_assign", { input }),
+  tagUnassign: (input) => call("tag_unassign", { input }),
+  tagSuggest: (fileId) => call("tag_suggest", { fileId }),
+
+  collectionList: () => call("collection_list"),
+  collectionCreate: (input) => call("collection_create", { input }),
+  collectionRename: (input) => call("collection_rename", { input }),
+  collectionDelete: (id) => call("collection_delete", { id }),
+  collectionAddFiles: (input) => call("collection_add_files", { input }),
+  collectionRemoveFiles: (input) => call("collection_remove_files", { input }),
+
+  personList: () => call("person_list"),
+  personGet: (id) => call("person_get", { id }),
+  personCreate: (input) => call("person_create", { input }),
+  personUpdate: (input) => call("person_update", { input }),
+  personDelete: (id) => call("person_delete", { id }),
+  personLink: (input) => call("person_link", { input }),
+  personUnlink: (input) => call("person_unlink", { input }),
+
+  noteGet: (fileId) => call("note_get", { fileId }),
+  noteSet: (input) => call("note_set", { input }),
+
+  fileSetRating: (input) => call("file_set_rating", { input }),
+  fileSetRatingBulk: (input) => call("file_set_rating_bulk", { input }),
+
   onImportProgress: (cb) => tauriListen("import:progress", cb),
   onVolumeChanged: (cb) => tauriListen("volume:changed", cb),
 };

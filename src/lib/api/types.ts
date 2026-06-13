@@ -200,6 +200,16 @@ export interface ImportFilesInput {
   mode: "copy" | "reference";
 }
 
+export interface PersonInput {
+  fullName: string;
+  title?: string;
+  organization?: string;
+  email?: string;
+  phone?: string;
+  avatarPath?: string;
+  bio?: string;
+}
+
 export interface BatchHandle {
   batchId: Id;
 }

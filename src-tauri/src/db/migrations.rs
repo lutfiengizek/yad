@@ -45,6 +45,60 @@ pub fn run_app_migrations(conn: &Connection) -> Result<(), AppError> {
     Ok(())
 }
 
+/// Kütüphane-başına şema, v1 (M1): volume + dosya kaydı (türetilmiş arama görünümü).
+///
+/// `file` tablosu Katman-1'dir (dosya kimliği/içerik). Katman-2 metadata (tag/note/...)
+/// M2'de Automerge'den projekte edilen ek tablolarla gelir.
+const LIB_V1: &str = r#"
+CREATE TABLE volume (
+    id                TEXT PRIMARY KEY,
+    library_id        TEXT NOT NULL,
+    name              TEXT NOT NULL,
+    root_path         TEXT NOT NULL,
+    status            TEXT NOT NULL DEFAULT 'connected',
+    is_workspace_root INTEGER NOT NULL DEFAULT 0,
+    disk_label        TEXT
+);
+
+CREATE TABLE file (
+    id            TEXT PRIMARY KEY,
+    volume_id     TEXT NOT NULL,
+    name          TEXT NOT NULL,
+    rel_path      TEXT NOT NULL,
+    abs_path      TEXT NOT NULL,
+    ext           TEXT NOT NULL,
+    mime          TEXT NOT NULL,
+    kind          TEXT NOT NULL,
+    size_bytes    INTEGER NOT NULL,
+    content_hash  TEXT NOT NULL,
+    thumbnail_path TEXT,
+    source_url    TEXT,
+    rating        INTEGER NOT NULL DEFAULT 0,
+    created_at    TEXT NOT NULL,
+    added_at      TEXT NOT NULL,
+    modified_at   TEXT NOT NULL,
+    is_available  INTEGER NOT NULL DEFAULT 1,
+    has_note      INTEGER NOT NULL DEFAULT 0,
+    trashed_at    TEXT,
+    FOREIGN KEY(volume_id) REFERENCES volume(id)
+);
+
+CREATE INDEX idx_file_volume ON file(volume_id);
+CREATE INDEX idx_file_hash ON file(content_hash);
+"#;
+
+/// Kütüphane-başına (`<root>/.yad/index.db`) migration'ları uygular (idempotent).
+pub fn run_library_migrations(conn: &Connection) -> Result<(), AppError> {
+    let version: i64 = conn.query_row("PRAGMA user_version", [], |row| row.get(0))?;
+
+    if version < 1 {
+        conn.execute_batch(LIB_V1)?;
+        conn.pragma_update(None, "user_version", 1)?;
+    }
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

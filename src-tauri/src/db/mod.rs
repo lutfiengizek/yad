@@ -29,6 +29,16 @@ pub fn open_app_db(path: &Path) -> Result<Connection, AppError> {
     Ok(conn)
 }
 
+/// Kütüphane-başına `index.db` açar (`<root>/.yad/index.db`) ve migration'ları uygular.
+///
+/// Üst dizinin (`.yad/`) önceden var olduğu varsayılır (kütüphane oluşturma adımında kurulur).
+pub fn open_library_db(path: &Path) -> Result<Connection, AppError> {
+    let conn = Connection::open(path)?;
+    apply_pragmas(&conn)?;
+    migrations::run_library_migrations(&conn)?;
+    Ok(conn)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

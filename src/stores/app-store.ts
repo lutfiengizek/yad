@@ -15,12 +15,16 @@ interface AppState {
   inspectorOpen: boolean;
   commandOpen: boolean;
   previewOpen: boolean;
+  membersOpen: boolean;
+  joinOpen: boolean;
   viewMode: ViewMode;
   route: Route;
   setSidebarOpen: (open: boolean) => void;
   setInspectorOpen: (open: boolean) => void;
   setCommandOpen: (open: boolean) => void;
   setPreviewOpen: (open: boolean) => void;
+  setMembersOpen: (open: boolean) => void;
+  setJoinOpen: (open: boolean) => void;
   setViewMode: (mode: ViewMode) => void;
   setRoute: (route: Route) => void;
 }
@@ -30,12 +34,16 @@ export const useAppStore = create<AppState>((set) => ({
   inspectorOpen: true,
   commandOpen: false,
   previewOpen: false,
+  membersOpen: false,
+  joinOpen: false,
   viewMode: "grid",
   route: { name: "files" },
   setSidebarOpen: (open) => set({ sidebarOpen: open }),
   setInspectorOpen: (open) => set({ inspectorOpen: open }),
   setCommandOpen: (open) => set({ commandOpen: open }),
   setPreviewOpen: (open) => set({ previewOpen: open }),
+  setMembersOpen: (open) => set({ membersOpen: open }),
+  setJoinOpen: (open) => set({ joinOpen: open }),
   setViewMode: (mode) => set({ viewMode: mode }),
   setRoute: (route) => set({ route }),
 }));

@@ -14,6 +14,8 @@ import { TopBar } from "@/components/shell/top-bar";
 import { StatusBar } from "@/components/shell/status-bar";
 import { OnboardingWizard } from "@/components/onboarding/onboarding-wizard";
 import { CommandPalette } from "@/components/shell/command-palette";
+import { MembersDialog } from "@/components/collab/members-dialog";
+import { JoinDialog } from "@/components/collab/join-dialog";
 import { QuickPreview } from "@/components/content/quick-preview";
 import { ImportQueue } from "@/components/content/import-queue";
 import { DropOverlay } from "@/components/content/drop-overlay";
@@ -62,6 +64,8 @@ function App() {
       </SidebarProvider>
       <OnboardingWizard />
       <CommandPalette />
+      <MembersDialog />
+      <JoinDialog />
       <QuickPreview />
       <DropOverlay />
       <ImportQueue />

@@ -16,6 +16,7 @@ interface CollabState {
   conflicts: Conflict[];
   sync: SyncStatus | null;
   myRole: Role | null;
+  myId: string | null;
   loaded: boolean;
   load: () => Promise<void>;
   setRole: (personId: string, role: Role) => Promise<void>;
@@ -34,6 +35,7 @@ export const useCollabStore = create<CollabState>((set, get) => ({
   conflicts: [],
   sync: null,
   myRole: null,
+  myId: null,
   loaded: false,
   load: async () => {
     const [members, conflicts, sync, identity] = await Promise.all([
@@ -45,7 +47,14 @@ export const useCollabStore = create<CollabState>((set, get) => ({
     const myRole = identity
       ? (members.find((m) => m.person.id === identity.id)?.role ?? null)
       : null;
-    set({ members, conflicts, sync, myRole, loaded: true });
+    set({
+      members,
+      conflicts,
+      sync,
+      myRole,
+      myId: identity?.id ?? null,
+      loaded: true,
+    });
   },
   setRole: async (personId, role) => {
     await api.memberSetRole({ personId, role });

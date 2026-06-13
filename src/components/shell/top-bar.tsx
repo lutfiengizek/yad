@@ -6,6 +6,7 @@ import {
   PanelRightIcon,
   SearchIcon,
   SettingsIcon,
+  Users2Icon,
   UserIcon,
 } from "lucide-react";
 
@@ -21,6 +22,7 @@ export function TopBar() {
   const setInspectorOpen = useAppStore((s) => s.setInspectorOpen);
   const inspectorOpen = useAppStore((s) => s.inspectorOpen);
   const setCommandOpen = useAppStore((s) => s.setCommandOpen);
+  const setMembersOpen = useAppStore((s) => s.setMembersOpen);
   const activeLibrary = useLibraryStore((s) =>
     s.libraries.find((l) => l.id === s.activeLibraryId),
   );
@@ -54,6 +56,14 @@ export function TopBar() {
 
       <div className="flex-1" />
 
+      <Button
+        variant="ghost"
+        size="icon"
+        aria-label={t("collab.share")}
+        onClick={() => setMembersOpen(true)}
+      >
+        <Users2Icon className="size-4" />
+      </Button>
       <ThemeToggle />
       <Button
         variant="ghost"

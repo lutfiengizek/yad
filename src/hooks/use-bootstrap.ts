@@ -7,6 +7,7 @@ import { useTheme } from "next-themes";
 import { api } from "@/lib/api";
 import { useActivityStore } from "@/stores/activity-store";
 import { useAppStore } from "@/stores/app-store";
+import { useCollabStore } from "@/stores/collab-store";
 import { useCollectionStore } from "@/stores/collection-store";
 import { useFileStore } from "@/stores/file-store";
 import { useLibraryStore } from "@/stores/library-store";
@@ -19,9 +20,11 @@ export function useBootstrap() {
 
   useEffect(() => {
     let cancelled = false;
-    const unsubscribe = api.onActivityNew((a) =>
-      useActivityStore.getState().prepend(a),
-    );
+    const unsubscribes = [
+      api.onActivityNew((a) => useActivityStore.getState().prepend(a)),
+      api.onSyncStatus((s) => useCollabStore.getState().setSync(s)),
+      api.onConflictNew((c) => useCollabStore.getState().addConflict(c)),
+    ];
     void (async () => {
       await useSettingsStore.getState().load();
       await useLibraryStore.getState().load();
@@ -37,11 +40,12 @@ export function useBootstrap() {
         useCollectionStore.getState().load(),
         usePersonStore.getState().load(),
         useActivityStore.getState().load(),
+        useCollabStore.getState().load(),
       ]);
     })();
     return () => {
       cancelled = true;
-      unsubscribe();
+      unsubscribes.forEach((u) => u());
     };
   }, [setTheme]);
 }

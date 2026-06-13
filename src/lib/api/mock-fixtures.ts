@@ -4,12 +4,15 @@
 import type {
   ActivityItem,
   Collection,
+  Conflict,
   FileItem,
   Identity,
   Library,
+  MemberInfo,
   NoteDoc,
   Person,
   Settings,
+  SyncStatus,
   Tag,
   Version,
   Volume,
@@ -208,6 +211,40 @@ export const sampleActivities: ActivityItem[] = [
     undoable: false,
   },
 ];
+
+export const sampleMembers: MemberInfo[] = [
+  {
+    person: {
+      id: "person-self",
+      fullName: "Ali Yılmaz",
+      organization: "Gazete X",
+      fileCount: 0,
+    },
+    role: "owner",
+    online: true,
+  },
+  { person: samplePersons[1], role: "editor", online: true },
+  { person: samplePersons[0], role: "viewer", online: false },
+];
+
+export const sampleConflicts: Conflict[] = [
+  {
+    id: "conf-1",
+    fileId: "f-2",
+    field: "rating",
+    mine: "4",
+    theirs: "3",
+    mineAuthor: "Ali Yılmaz",
+    theirsAuthor: "Ayşe Demir",
+    createdAt: NOW,
+  },
+];
+
+export const defaultSyncStatus: SyncStatus = {
+  state: "idle",
+  peersOnline: 1,
+  lastSyncedAt: NOW,
+};
 
 export const sampleNotes: NoteDoc[] = [
   {

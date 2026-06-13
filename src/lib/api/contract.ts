@@ -7,21 +7,27 @@ import type {
   AppInitResult,
   BatchHandle,
   Collection,
+  Conflict,
   FileItem,
   Id,
   Identity,
   IdentityInput,
   ImportFilesInput,
   ImportProgress,
+  InviteLink,
   Library,
   LibraryCreateInput,
+  MemberInfo,
   NoteDoc,
   Page,
   Person,
   PersonInput,
+  ResolveChoice,
+  Role,
   SearchGlobalResult,
   SearchQuery,
   Settings,
+  SyncStatus,
   Tag,
   TagType,
   Version,
@@ -121,8 +127,27 @@ export interface Api {
   fileRestore(input: { ids: Id[] }): Promise<void>;
   fileDeletePermanent(input: { ids: Id[] }): Promise<void>;
 
+  // M5 — P2P & işbirliği
+  memberList(): Promise<MemberInfo[]>;
+  memberSetRole(input: { personId: Id; role: Role }): Promise<void>;
+  memberRemove(personId: Id): Promise<void>;
+  inviteCreate(input: {
+    role: Role;
+    expiresInDays: number;
+  }): Promise<InviteLink>;
+  inviteAccept(input: { link: string }): Promise<{ libraryId: Id }>;
+  syncStatus(): Promise<SyncStatus>;
+  conflictList(): Promise<Conflict[]>;
+  conflictResolve(input: {
+    conflictId: Id;
+    choice: ResolveChoice;
+    mergedValue?: string;
+  }): Promise<void>;
+
   // Events (backend emit → frontend listen) — payload tipleri sözleşmeden.
   onImportProgress(cb: (p: ImportProgress) => void): Unsubscribe;
   onVolumeChanged(cb: (v: Volume) => void): Unsubscribe;
   onActivityNew(cb: (a: ActivityItem) => void): Unsubscribe;
+  onSyncStatus(cb: (s: SyncStatus) => void): Unsubscribe;
+  onConflictNew(cb: (c: Conflict) => void): Unsubscribe;
 }

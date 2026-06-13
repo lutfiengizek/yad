@@ -168,6 +168,41 @@ export interface ImportProgress {
   errorMessage?: string;
 }
 
+// --- M5: P2P & işbirliği (backend src-tauri ile birebir) ---
+
+export type SyncState = "idle" | "syncing" | "offline" | "error";
+
+export interface SyncStatus {
+  state: SyncState;
+  peersOnline: number;
+  lastSyncedAt?: IsoDate;
+  message?: string;
+}
+
+export interface MemberInfo {
+  person: Person;
+  role: Role;
+  online: boolean;
+}
+
+export interface InviteLink {
+  link: string;
+  expiresAt: IsoDate;
+}
+
+export interface Conflict {
+  id: Id;
+  fileId: Id;
+  field: string;
+  mine: string;
+  theirs: string;
+  mineAuthor: string;
+  theirsAuthor: string;
+  createdAt: IsoDate;
+}
+
+export type ResolveChoice = "mine" | "theirs" | "merge";
+
 // Hata: invoke reject olunca normalize edilen şekil.
 export interface ApiError {
   code:

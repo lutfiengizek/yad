@@ -90,7 +90,18 @@ export const clientApi: Api = {
   fileRestore: (input) => call("file_restore", { input }),
   fileDeletePermanent: (input) => call("file_delete_permanent", { input }),
 
+  memberList: () => call("member_list"),
+  memberSetRole: (input) => call("member_set_role", { input }),
+  memberRemove: (personId) => call("member_remove", { personId }),
+  inviteCreate: (input) => call("invite_create", { input }),
+  inviteAccept: (input) => call("invite_accept", { input }),
+  syncStatus: () => call("sync_status"),
+  conflictList: () => call("conflict_list"),
+  conflictResolve: (input) => call("conflict_resolve", { input }),
+
   onImportProgress: (cb) => tauriListen("import:progress", cb),
   onVolumeChanged: (cb) => tauriListen("volume:changed", cb),
   onActivityNew: (cb) => tauriListen("activity:new", cb),
+  onSyncStatus: (cb) => tauriListen("sync:status", cb),
+  onConflictNew: (cb) => tauriListen("conflict:new", cb),
 };

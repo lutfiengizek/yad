@@ -7,11 +7,14 @@ import { MockEventBus } from "./events";
 import {
   NOW,
   defaultSettings,
+  defaultSyncStatus,
   sampleActivities,
   sampleCollections,
+  sampleConflicts,
   sampleFiles,
   sampleIdentity,
   sampleLibrary,
+  sampleMembers,
   sampleNotes,
   samplePersons,
   sampleTags,
@@ -21,14 +24,17 @@ import {
 import type {
   ActivityItem,
   Collection,
+  Conflict,
   FileItem,
   FileKind,
   Identity,
   ImportFilesInput,
   Library,
+  MemberInfo,
   NoteDoc,
   Person,
   Settings,
+  SyncStatus,
   Tag,
   Version,
   Volume,
@@ -74,6 +80,9 @@ class MockState {
   activities: ActivityItem[] = START_EMPTY ? [] : clone(sampleActivities);
   trashedFiles: FileItem[] = [];
   trashedAt: Record<string, string> = {};
+  members: MemberInfo[] = START_EMPTY ? [] : clone(sampleMembers);
+  conflicts: Conflict[] = START_EMPTY ? [] : clone(sampleConflicts);
+  syncStatus: SyncStatus = clone(defaultSyncStatus);
   bus = new MockEventBus();
   counters = {
     library: 1,
@@ -641,6 +650,52 @@ export const mockApi: Api = {
     return delay(undefined);
   },
 
+  // --- M5: işbirliği ---
+  memberList: () => delay(clone(state.members)),
+
+  memberSetRole: ({ personId, role }) => {
+    const member = state.members.find((m) => m.person.id === personId);
+    if (member) member.role = role;
+    return delay(undefined);
+  },
+
+  memberRemove: (personId) => {
+    state.members = state.members.filter((m) => m.person.id !== personId);
+    return delay(undefined);
+  },
+
+  inviteCreate: ({ role, expiresInDays }) => {
+    const expiresAt = new Date(
+      Date.parse(NOW) + expiresInDays * 86_400_000,
+    ).toISOString();
+    return delay({
+      link: `yad-invite:mock-${role}-${expiresInDays}d`,
+      expiresAt,
+    });
+  },
+
+  inviteAccept: () => delay({ libraryId: "lib-1" }),
+
+  syncStatus: () => delay(clone(state.syncStatus)),
+
+  conflictList: () => delay(clone(state.conflicts)),
+
+  conflictResolve: ({ conflictId, choice, mergedValue }) => {
+    const conflict = state.conflicts.find((c) => c.id === conflictId);
+    if (conflict && conflict.field === "rating") {
+      const value =
+        choice === "mine"
+          ? conflict.mine
+          : choice === "theirs"
+            ? conflict.theirs
+            : (mergedValue ?? conflict.mine);
+      const file = state.files.find((f) => f.id === conflict.fileId);
+      if (file) file.rating = Number(value) || 0;
+    }
+    state.conflicts = state.conflicts.filter((c) => c.id !== conflictId);
+    return delay(undefined);
+  },
+
   // --- M3: arama ---
   search: (query) => mockApi.fileList(query),
 
@@ -672,4 +727,6 @@ export const mockApi: Api = {
   onImportProgress: (cb) => state.bus.on("import:progress", cb),
   onVolumeChanged: (cb) => state.bus.on("volume:changed", cb),
   onActivityNew: (cb) => state.bus.on("activity:new", cb),
+  onSyncStatus: (cb) => state.bus.on("sync:status", cb),
+  onConflictNew: (cb) => state.bus.on("conflict:new", cb),
 };

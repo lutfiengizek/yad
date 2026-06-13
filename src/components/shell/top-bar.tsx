@@ -24,6 +24,7 @@ export function TopBar() {
   const setCommandOpen = useAppStore((s) => s.setCommandOpen);
   const setMembersOpen = useAppStore((s) => s.setMembersOpen);
   const setProfileOpen = useAppStore((s) => s.setProfileOpen);
+  const setSettingsOpen = useAppStore((s) => s.setSettingsOpen);
   const activeLibrary = useLibraryStore((s) =>
     s.libraries.find((l) => l.id === s.activeLibraryId),
   );
@@ -75,7 +76,12 @@ export function TopBar() {
       >
         <PanelRightIcon className="size-4" />
       </Button>
-      <Button variant="ghost" size="icon" aria-label={t("topbar.settings")}>
+      <Button
+        variant="ghost"
+        size="icon"
+        aria-label={t("topbar.settings")}
+        onClick={() => setSettingsOpen(true)}
+      >
         <SettingsIcon className="size-4" />
       </Button>
       <Button

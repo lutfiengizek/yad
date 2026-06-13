@@ -19,6 +19,8 @@ interface AppState {
   joinOpen: boolean;
   conflictOpen: boolean;
   profileOpen: boolean;
+  settingsOpen: boolean;
+  shortcutsOpen: boolean;
   viewMode: ViewMode;
   route: Route;
   setSidebarOpen: (open: boolean) => void;
@@ -29,6 +31,8 @@ interface AppState {
   setJoinOpen: (open: boolean) => void;
   setConflictOpen: (open: boolean) => void;
   setProfileOpen: (open: boolean) => void;
+  setSettingsOpen: (open: boolean) => void;
+  setShortcutsOpen: (open: boolean) => void;
   setViewMode: (mode: ViewMode) => void;
   setRoute: (route: Route) => void;
 }
@@ -42,6 +46,8 @@ export const useAppStore = create<AppState>((set) => ({
   joinOpen: false,
   conflictOpen: false,
   profileOpen: false,
+  settingsOpen: false,
+  shortcutsOpen: false,
   viewMode: "grid",
   route: { name: "files" },
   setSidebarOpen: (open) => set({ sidebarOpen: open }),
@@ -52,6 +58,8 @@ export const useAppStore = create<AppState>((set) => ({
   setJoinOpen: (open) => set({ joinOpen: open }),
   setConflictOpen: (open) => set({ conflictOpen: open }),
   setProfileOpen: (open) => set({ profileOpen: open }),
+  setSettingsOpen: (open) => set({ settingsOpen: open }),
+  setShortcutsOpen: (open) => set({ shortcutsOpen: open }),
   setViewMode: (mode) => set({ viewMode: mode }),
   setRoute: (route) => set({ route }),
 }));

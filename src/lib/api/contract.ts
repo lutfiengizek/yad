@@ -144,6 +144,10 @@ export interface Api {
     mergedValue?: string;
   }): Promise<void>;
 
+  // M6 — güncelleme (backend henüz yok; mock stub)
+  updateCheck(): Promise<{ available: boolean; version?: string }>;
+  updateInstall(): Promise<void>;
+
   // Events (backend emit → frontend listen) — payload tipleri sözleşmeden.
   onImportProgress(cb: (p: ImportProgress) => void): Unsubscribe;
   onVolumeChanged(cb: (v: Volume) => void): Unsubscribe;

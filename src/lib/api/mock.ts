@@ -696,6 +696,10 @@ export const mockApi: Api = {
     return delay(undefined);
   },
 
+  // --- M6: güncelleme (stub) ---
+  updateCheck: () => delay({ available: false }),
+  updateInstall: () => delay(undefined),
+
   // --- M3: arama ---
   search: (query) => mockApi.fileList(query),
 

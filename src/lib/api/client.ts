@@ -99,6 +99,9 @@ export const clientApi: Api = {
   conflictList: () => call("conflict_list"),
   conflictResolve: (input) => call("conflict_resolve", { input }),
 
+  updateCheck: () => call("update_check"),
+  updateInstall: () => call("update_install"),
+
   onImportProgress: (cb) => tauriListen("import:progress", cb),
   onVolumeChanged: (cb) => tauriListen("volume:changed", cb),
   onActivityNew: (cb) => tauriListen("activity:new", cb),

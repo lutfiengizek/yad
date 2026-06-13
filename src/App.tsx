@@ -18,6 +18,7 @@ import { MembersDialog } from "@/components/collab/members-dialog";
 import { JoinDialog } from "@/components/collab/join-dialog";
 import { ConflictModal } from "@/components/collab/conflict-modal";
 import { ProfileDialog } from "@/components/shell/profile-dialog";
+import { SettingsDialog } from "@/components/shell/settings-dialog";
 import { QuickPreview } from "@/components/content/quick-preview";
 import { ImportQueue } from "@/components/content/import-queue";
 import { DropOverlay } from "@/components/content/drop-overlay";
@@ -70,6 +71,7 @@ function App() {
       <JoinDialog />
       <ConflictModal />
       <ProfileDialog />
+      <SettingsDialog />
       <QuickPreview />
       <DropOverlay />
       <ImportQueue />

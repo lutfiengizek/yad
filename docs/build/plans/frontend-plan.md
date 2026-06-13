@@ -34,13 +34,20 @@
 - [x] M2.5 Kişi kartları (inspector bağla/oluştur + sidebar + detay sayfası, route).
 - [x] M2.6 ProseMirror not editörü (tiptap, Merriweather).
 
+## M3 — Arama & Önizleme ✓
+- [x] M3.1 API search + search_global (mock).
+- [x] M3.2 Ctrl+K komut paleti (çok-tipli, kategorili).
+- [x] M3.3 QuickPreview (Space) + çift-tık.
+- [x] M3.4 Filtre (tür/rating/çevrimdışı) + sıralama; file-store base+filters.
+- [x] M3.5 Loupe (E) + Karşılaştır (C) + tek-tuş kısayollar (G/L/E/C).
+
 ## Tasarım cilası (kullanıcı geri bildirimi)
 Sidebar/topbar/statusbar/inspector tutarlılığı: etkileşimsiz metin butona sarılmaz,
 placeholder'lar temiz, çalışma alanı aktif kütüphane adını gösterir. Token-tabanlı,
 hardcoded renk yok.
 
 ## Durum
-M0+M1+M2 tamam: 34 test geçer, `tsc`/`pnpm build` temiz. Tümü mock üzerinde çalışır
+M0+M1+M2+M3 tamam: 42 test geçer, `tsc`/`pnpm build` temiz. Tümü mock üzerinde çalışır
 (`VITE_USE_MOCK` varsayılan; onboarding'i görmek için `VITE_MOCK_EMPTY=true`).
 Görsel açık/koyu tema piksel kontrolü çalışan uygulamada elle doğrulanmalı
 (tarayıcı otomasyonu yok; tüm bileşenler token-tabanlı → yapısal olarak tema-uyumlu).

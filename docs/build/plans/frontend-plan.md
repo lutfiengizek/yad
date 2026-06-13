@@ -26,8 +26,21 @@
 - [x] M1.4 `components/content/{content-area,file-grid,file-list}.tsx` + empty/skeleton.
 - [x] M1.5 `components/content/import-queue.tsx` + drag-drop overlay + Toaster.
 
+## M2 — Organizasyon ✓
+- [x] M2.1 API katmanı M2 komutları (tag/collection/person/note/rating) + tag/collection/person store.
+- [x] M2.2 Inspector sekmeleri (Künye/Geçmiş/Atıf) + düzenlenebilir rating.
+- [x] M2.3 Etiket editörü (ata/oluştur/öneri) + sidebar hiyerarşik etiketler.
+- [x] M2.4 Koleksiyonlar (sidebar liste/oluştur + inspector ekle/çıkar).
+- [x] M2.5 Kişi kartları (inspector bağla/oluştur + sidebar + detay sayfası, route).
+- [x] M2.6 ProseMirror not editörü (tiptap, Merriweather).
+
+## Tasarım cilası (kullanıcı geri bildirimi)
+Sidebar/topbar/statusbar/inspector tutarlılığı: etkileşimsiz metin butona sarılmaz,
+placeholder'lar temiz, çalışma alanı aktif kütüphane adını gösterir. Token-tabanlı,
+hardcoded renk yok.
+
 ## Durum
-M0+M1 tamam: 21 test geçer, `tsc`/`pnpm build` temiz. Tümü mock üzerinde çalışır
+M0+M1+M2 tamam: 34 test geçer, `tsc`/`pnpm build` temiz. Tümü mock üzerinde çalışır
 (`VITE_USE_MOCK` varsayılan; onboarding'i görmek için `VITE_MOCK_EMPTY=true`).
 Görsel açık/koyu tema piksel kontrolü çalışan uygulamada elle doğrulanmalı
 (tarayıcı otomasyonu yok; tüm bileşenler token-tabanlı → yapısal olarak tema-uyumlu).

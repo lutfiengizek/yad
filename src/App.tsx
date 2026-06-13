@@ -4,12 +4,27 @@ import {
   ResizablePanel,
   ResizableHandle,
 } from "@/components/ui/resizable";
+import { lazy, Suspense } from "react";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import { ContentArea } from "@/components/content/content-area";
-import { PersonDetailPage } from "@/components/person/person-detail-page";
-import { ActivityFeedPage } from "@/components/activity/activity-feed-page";
-import { TrashPage } from "@/components/trash/trash-page";
 import { InspectorPanel } from "@/components/inspector/inspector-panel";
+
+// Route sayfaları yalnızca o route aktifken yüklenir (ayrı chunk'lar).
+const PersonDetailPage = lazy(() =>
+  import("@/components/person/person-detail-page").then((m) => ({
+    default: m.PersonDetailPage,
+  })),
+);
+const ActivityFeedPage = lazy(() =>
+  import("@/components/activity/activity-feed-page").then((m) => ({
+    default: m.ActivityFeedPage,
+  })),
+);
+const TrashPage = lazy(() =>
+  import("@/components/trash/trash-page").then((m) => ({
+    default: m.TrashPage,
+  })),
+);
 import { TopBar } from "@/components/shell/top-bar";
 import { StatusBar } from "@/components/shell/status-bar";
 import { OnboardingWizard } from "@/components/onboarding/onboarding-wizard";
@@ -43,15 +58,17 @@ function App() {
           <div className="min-h-0 flex-1">
             <ResizablePanelGroup orientation="horizontal" className="h-full">
               <ResizablePanel defaultSize={70} minSize={40}>
-                {route.name === "person" ? (
-                  <PersonDetailPage personId={route.personId} />
-                ) : route.name === "activity" ? (
-                  <ActivityFeedPage />
-                ) : route.name === "trash" ? (
-                  <TrashPage />
-                ) : (
-                  <ContentArea />
-                )}
+                <Suspense fallback={null}>
+                  {route.name === "person" ? (
+                    <PersonDetailPage personId={route.personId} />
+                  ) : route.name === "activity" ? (
+                    <ActivityFeedPage />
+                  ) : route.name === "trash" ? (
+                    <TrashPage />
+                  ) : (
+                    <ContentArea />
+                  )}
+                </Suspense>
               </ResizablePanel>
               {inspectorOpen && (
                 <>

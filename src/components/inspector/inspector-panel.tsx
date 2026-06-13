@@ -1,7 +1,7 @@
 // Sağ müfettiş paneli: seçili dosyanın önizleme + düzenlenebilir rating + sekmeler.
 // Künye sekmesi metadata; etiket/kişi/not bölümleri sonraki M2 adımlarında eklenir.
 
-import { useEffect, useState, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
 import {
   CheckIcon,
   ExternalLinkIcon,
@@ -22,11 +22,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCanEdit } from "@/hooks/use-can-edit";
 import { FileKindIcon, kindLabel } from "@/components/content/file-kind";
 import { CollectionSection } from "./collection-section";
-import { NoteSection } from "./note-section";
 import { PersonSection } from "./person-section";
 import { TagSection } from "./tag-section";
 import { VersionHistory } from "./version-history";
 import { t } from "@/i18n";
+
+// tiptap ağır olduğu için not editörü ilk dosya seçildiğinde yüklenir (ayrı chunk).
+const NoteSection = lazy(() =>
+  import("./note-section").then((m) => ({ default: m.NoteSection })),
+);
 import { api } from "@/lib/api";
 import { assetUrl } from "@/lib/asset";
 import { formatBytes, formatDate } from "@/lib/format";
@@ -218,7 +222,9 @@ export function InspectorPanel() {
             <TagSection file={file} />
             <PersonSection file={file} />
             <CollectionSection file={file} />
-            <NoteSection file={file} />
+            <Suspense fallback={null}>
+              <NoteSection file={file} />
+            </Suspense>
 
             <Separator />
 

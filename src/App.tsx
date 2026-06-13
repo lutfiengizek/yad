@@ -19,6 +19,7 @@ import { JoinDialog } from "@/components/collab/join-dialog";
 import { ConflictModal } from "@/components/collab/conflict-modal";
 import { ProfileDialog } from "@/components/shell/profile-dialog";
 import { SettingsDialog } from "@/components/shell/settings-dialog";
+import { ShortcutsDialog } from "@/components/shell/shortcuts-dialog";
 import { QuickPreview } from "@/components/content/quick-preview";
 import { ImportQueue } from "@/components/content/import-queue";
 import { DropOverlay } from "@/components/content/drop-overlay";
@@ -72,6 +73,7 @@ function App() {
       <ConflictModal />
       <ProfileDialog />
       <SettingsDialog />
+      <ShortcutsDialog />
       <QuickPreview />
       <DropOverlay />
       <ImportQueue />

@@ -16,8 +16,16 @@ export function useKeyboardShortcuts() {
     function onKey(e: KeyboardEvent) {
       const app = useAppStore.getState();
       if (app.commandOpen || app.previewOpen) return;
-      if (app.route.name !== "files") return;
       if (isEditableTarget(e.target)) return;
+
+      // ? her route'ta kısayol listesini açar.
+      if (e.key === "?") {
+        e.preventDefault();
+        app.setShortcutsOpen(true);
+        return;
+      }
+
+      if (app.route.name !== "files") return;
       if (e.metaKey || e.ctrlKey || e.altKey) return;
 
       if (e.key === "Delete") {

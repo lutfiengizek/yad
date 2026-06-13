@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileKindIcon, kindLabel } from "@/components/content/file-kind";
 import { CollectionSection } from "./collection-section";
+import { NoteSection } from "./note-section";
 import { PersonSection } from "./person-section";
 import { TagSection } from "./tag-section";
 import { t } from "@/i18n";
@@ -118,6 +119,7 @@ export function InspectorPanel() {
             <TagSection file={file} />
             <PersonSection file={file} />
             <CollectionSection file={file} />
+            <NoteSection file={file} />
 
             <Separator />
 

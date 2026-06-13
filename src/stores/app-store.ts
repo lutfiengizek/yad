@@ -1,7 +1,11 @@
 import { create } from "zustand";
 
-// Merkez panelde ne gösterildiği: dosya listesi ya da kişi kartı detayı.
-export type Route = { name: "files" } | { name: "person"; personId: string };
+// Merkez panelde ne gösterildiği: dosya listesi, kişi kartı, aktivite akışı ya da çöp.
+export type Route =
+  | { name: "files" }
+  | { name: "person"; personId: string }
+  | { name: "activity" }
+  | { name: "trash" };
 
 // Dosya görünüm modu: ızgara/liste (kalıcı) + loupe/karşılaştır (geçici).
 export type ViewMode = "grid" | "list" | "loupe" | "compare";

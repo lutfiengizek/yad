@@ -23,6 +23,7 @@ export function TopBar() {
   const inspectorOpen = useAppStore((s) => s.inspectorOpen);
   const setCommandOpen = useAppStore((s) => s.setCommandOpen);
   const setMembersOpen = useAppStore((s) => s.setMembersOpen);
+  const setProfileOpen = useAppStore((s) => s.setProfileOpen);
   const activeLibrary = useLibraryStore((s) =>
     s.libraries.find((l) => l.id === s.activeLibraryId),
   );
@@ -82,6 +83,7 @@ export function TopBar() {
         size="icon"
         aria-label={t("topbar.profile")}
         className="text-muted-foreground"
+        onClick={() => setProfileOpen(true)}
       >
         <span className="bg-primary/15 text-primary flex size-7 items-center justify-center rounded-full">
           <UserIcon className="size-4" />

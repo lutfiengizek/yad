@@ -1,11 +1,19 @@
 // Sağ müfettiş paneli: seçili dosyanın önizleme + düzenlenebilir rating + sekmeler.
 // Künye sekmesi metadata; etiket/kişi/not bölümleri sonraki M2 adımlarında eklenir.
 
-import type { ReactNode } from "react";
-import { ExternalLinkIcon, StarIcon } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
+import {
+  CheckIcon,
+  ExternalLinkIcon,
+  FolderOpenIcon,
+  PencilIcon,
+  StarIcon,
+  XIcon,
+} from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -64,6 +72,15 @@ function MetaRow({ label, value }: { label: string; value: ReactNode }) {
 export function InspectorPanel() {
   const file = useFileStore((s) => s.files.find((f) => f.id === s.selectedId));
   const canEdit = useCanEdit();
+  const [renaming, setRenaming] = useState(false);
+  const [nameDraft, setNameDraft] = useState("");
+  const [editingUrl, setEditingUrl] = useState(false);
+  const [urlDraft, setUrlDraft] = useState("");
+
+  useEffect(() => {
+    setRenaming(false);
+    setEditingUrl(false);
+  }, [file?.id]);
 
   if (!file) {
     return (
@@ -76,6 +93,21 @@ export function InspectorPanel() {
   async function rate(n: number) {
     await api.fileSetRating({ id: file!.id, rating: n });
     await useFileStore.getState().reload();
+  }
+
+  async function doRename() {
+    const name = nameDraft.trim();
+    if (name && name !== file!.name) {
+      await api.fileRename({ id: file!.id, newName: name });
+      await useFileStore.getState().reload();
+    }
+    setRenaming(false);
+  }
+
+  async function doSetUrl() {
+    await api.fileSetSourceUrl({ id: file!.id, url: urlDraft.trim() });
+    await useFileStore.getState().reload();
+    setEditingUrl(false);
   }
 
   return (
@@ -97,16 +129,60 @@ export function InspectorPanel() {
         </div>
 
         <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <h2 className="flex-1 text-sm font-medium break-all">
-              {file.name}
-            </h2>
-            {!canEdit && (
-              <Badge variant="secondary" className="shrink-0 text-[10px]">
-                {t("collab.readOnly")}
-              </Badge>
-            )}
-          </div>
+          {renaming ? (
+            <div className="flex items-center gap-1">
+              <Input
+                value={nameDraft}
+                onChange={(e) => setNameDraft(e.target.value)}
+                autoFocus
+                className="h-7 text-sm"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") void doRename();
+                  if (e.key === "Escape") setRenaming(false);
+                }}
+              />
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                aria-label={t("inspector.save")}
+                onClick={() => void doRename()}
+              >
+                <CheckIcon className="size-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                aria-label={t("common.cancel")}
+                onClick={() => setRenaming(false)}
+              >
+                <XIcon className="size-4" />
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <h2 className="flex-1 text-sm font-medium break-all">
+                {file.name}
+              </h2>
+              {!canEdit ? (
+                <Badge variant="secondary" className="shrink-0 text-[10px]">
+                  {t("collab.readOnly")}
+                </Badge>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={t("inspector.rename")}
+                  className="shrink-0"
+                  onClick={() => {
+                    setNameDraft(file.name);
+                    setRenaming(true);
+                  }}
+                >
+                  <PencilIcon className="size-3.5" />
+                </Button>
+              )}
+            </div>
+          )}
           <p className="text-muted-foreground text-xs">
             {kindLabel(file.kind)} · {formatBytes(file.sizeBytes)}
             {!file.isAvailable && ` · ${t("inspector.offline")}`}
@@ -159,36 +235,96 @@ export function InspectorPanel() {
                   <span className="font-mono text-xs">{file.contentHash}</span>
                 }
               />
-              {file.sourceUrl && (
-                <MetaRow
-                  label={t("inspector.url")}
-                  value={
-                    <a
-                      href={file.sourceUrl}
-                      className="text-primary inline-flex items-center gap-1 hover:underline"
-                      target="_blank"
-                      rel="noreferrer"
+              <MetaRow
+                label={t("inspector.url")}
+                value={
+                  editingUrl ? (
+                    <span className="flex items-center gap-1">
+                      <Input
+                        value={urlDraft}
+                        onChange={(e) => setUrlDraft(e.target.value)}
+                        autoFocus
+                        placeholder="https://…"
+                        className="h-7 text-xs"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") void doSetUrl();
+                          if (e.key === "Escape") setEditingUrl(false);
+                        }}
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label={t("inspector.save")}
+                        onClick={() => void doSetUrl()}
+                      >
+                        <CheckIcon className="size-4" />
+                      </Button>
+                    </span>
+                  ) : file.sourceUrl ? (
+                    <span className="flex items-center gap-1">
+                      <a
+                        href={file.sourceUrl}
+                        className="text-primary inline-flex items-center gap-1 truncate hover:underline"
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {file.sourceUrl}
+                        <ExternalLinkIcon className="size-3 shrink-0" />
+                      </a>
+                      {canEdit && (
+                        <button
+                          type="button"
+                          aria-label={t("inspector.rename")}
+                          onClick={() => {
+                            setUrlDraft(file.sourceUrl ?? "");
+                            setEditingUrl(true);
+                          }}
+                        >
+                          <PencilIcon className="text-muted-foreground size-3" />
+                        </button>
+                      )}
+                    </span>
+                  ) : canEdit ? (
+                    <button
+                      type="button"
+                      className="text-muted-foreground hover:text-foreground"
+                      onClick={() => {
+                        setUrlDraft("");
+                        setEditingUrl(true);
+                      }}
                     >
-                      {file.sourceUrl}
-                      <ExternalLinkIcon className="size-3" />
-                    </a>
-                  }
-                />
-              )}
+                      {t("inspector.addSourceUrl")}
+                    </button>
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )
+                }
+              />
             </dl>
 
             <Separator />
 
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full"
-              disabled={!file.isAvailable}
-              onClick={() => void api.fileOpenExternal(file.id)}
-            >
-              <ExternalLinkIcon className="size-4" />
-              {t("inspector.openExternal")}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1"
+                disabled={!file.isAvailable}
+                onClick={() => void api.fileOpenExternal(file.id)}
+              >
+                <ExternalLinkIcon className="size-4" />
+                {t("inspector.openExternal")}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                aria-label={t("inspector.reveal")}
+                disabled={!file.isAvailable}
+                onClick={() => void api.fileRevealInOs(file.id)}
+              >
+                <FolderOpenIcon className="size-4" />
+              </Button>
+            </div>
           </TabsContent>
 
           <TabsContent value="history" className="pt-2">

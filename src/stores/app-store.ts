@@ -18,6 +18,7 @@ interface AppState {
   membersOpen: boolean;
   joinOpen: boolean;
   conflictOpen: boolean;
+  profileOpen: boolean;
   viewMode: ViewMode;
   route: Route;
   setSidebarOpen: (open: boolean) => void;
@@ -27,6 +28,7 @@ interface AppState {
   setMembersOpen: (open: boolean) => void;
   setJoinOpen: (open: boolean) => void;
   setConflictOpen: (open: boolean) => void;
+  setProfileOpen: (open: boolean) => void;
   setViewMode: (mode: ViewMode) => void;
   setRoute: (route: Route) => void;
 }
@@ -39,6 +41,7 @@ export const useAppStore = create<AppState>((set) => ({
   membersOpen: false,
   joinOpen: false,
   conflictOpen: false,
+  profileOpen: false,
   viewMode: "grid",
   route: { name: "files" },
   setSidebarOpen: (open) => set({ sidebarOpen: open }),
@@ -48,6 +51,7 @@ export const useAppStore = create<AppState>((set) => ({
   setMembersOpen: (open) => set({ membersOpen: open }),
   setJoinOpen: (open) => set({ joinOpen: open }),
   setConflictOpen: (open) => set({ conflictOpen: open }),
+  setProfileOpen: (open) => set({ profileOpen: open }),
   setViewMode: (mode) => set({ viewMode: mode }),
   setRoute: (route) => set({ route }),
 }));

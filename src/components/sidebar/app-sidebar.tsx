@@ -1,11 +1,8 @@
 import {
   ClockIcon,
-  FolderIcon,
+  GalleryVerticalEndIcon,
   HardDriveIcon,
   LayersIcon,
-  PlusIcon,
-  TagIcon,
-  UsersIcon,
 } from "lucide-react";
 
 import {
@@ -13,7 +10,6 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
-  SidebarGroupAction,
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarHeader,
@@ -34,9 +30,15 @@ function VolumeStatusDot({ status }: { status: Volume["status"] }) {
         "size-2 shrink-0 rounded-full",
         status === "connected"
           ? "bg-primary"
-          : "border-muted-foreground/50 border",
+          : "border-muted-foreground/40 border",
       )}
     />
+  );
+}
+
+function EmptyHint({ label }: { label: string }) {
+  return (
+    <p className="text-muted-foreground/70 px-2 py-1 text-xs">{label}</p>
   );
 }
 
@@ -47,14 +49,18 @@ export function AppSidebar() {
 
   return (
     <Sidebar>
-      <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton size="lg">
-              <span className="text-lg font-bold">{t("app.name")}</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+      <SidebarHeader className="border-sidebar-border border-b">
+        <div className="flex items-center gap-2 px-1 py-1">
+          <div className="bg-primary text-primary-foreground flex size-8 shrink-0 items-center justify-center rounded-md">
+            <GalleryVerticalEndIcon className="size-4" />
+          </div>
+          <div className="flex flex-col leading-tight">
+            <span className="text-sm font-semibold">{t("app.name")}</span>
+            <span className="text-muted-foreground text-xs">
+              {t("app.tagline")}
+            </span>
+          </div>
+        </div>
       </SidebarHeader>
 
       <SidebarContent>
@@ -90,59 +96,29 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* KOLEKSİYONLAR — CRUD M2 */}
+        {/* KOLEKSİYONLAR — M2 */}
         <SidebarGroup>
           <SidebarGroupLabel>
             {t("library.sectionCollections")}
           </SidebarGroupLabel>
-          <SidebarGroupAction title={t("common.add")} aria-disabled>
-            <PlusIcon />
-          </SidebarGroupAction>
           <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton disabled className="text-muted-foreground">
-                  <FolderIcon />
-                  <span>—</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
+            <EmptyHint label={t("library.noCollections")} />
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* ETİKETLER — CRUD M2 */}
+        {/* ETİKETLER — M2 */}
         <SidebarGroup>
           <SidebarGroupLabel>{t("library.sectionTags")}</SidebarGroupLabel>
-          <SidebarGroupAction title={t("common.add")} aria-disabled>
-            <PlusIcon />
-          </SidebarGroupAction>
           <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton disabled className="text-muted-foreground">
-                  <TagIcon />
-                  <span>—</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
+            <EmptyHint label={t("library.noTags")} />
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* KİŞİLER — CRUD M2 */}
+        {/* KİŞİLER — M2 */}
         <SidebarGroup>
           <SidebarGroupLabel>{t("library.sectionPersons")}</SidebarGroupLabel>
-          <SidebarGroupAction title={t("common.add")} aria-disabled>
-            <PlusIcon />
-          </SidebarGroupAction>
           <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton disabled className="text-muted-foreground">
-                  <UsersIcon />
-                  <span>—</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
+            <EmptyHint label={t("library.noPersons")} />
           </SidebarGroupContent>
         </SidebarGroup>
 
@@ -161,7 +137,9 @@ export function AppSidebar() {
                     }
                   >
                     <HardDriveIcon />
-                    <span className="flex-1 truncate text-left">{vol.name}</span>
+                    <span className="flex-1 truncate text-left">
+                      {vol.name}
+                    </span>
                     <VolumeStatusDot status={vol.status} />
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -171,16 +149,10 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton>
-              <span className="text-muted-foreground text-xs">
-                {t("app.name")} {t("app.version")}
-              </span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+      <SidebarFooter className="border-sidebar-border border-t">
+        <p className="text-muted-foreground px-2 py-1 text-xs">
+          {t("app.name")} · {t("app.version")}
+        </p>
       </SidebarFooter>
     </Sidebar>
   );

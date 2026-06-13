@@ -2,6 +2,7 @@ const tr = {
   app: {
     name: "YAD",
     version: "v0.1.0",
+    tagline: "Dijital Arşiv",
   },
   topbar: {
     theme: "Tema",
@@ -51,6 +52,9 @@ const tr = {
     sectionTags: "ETİKETLER",
     sectionPersons: "KİŞİLER",
     sectionVolumes: "VOLUME'LAR",
+    noCollections: "Henüz koleksiyon yok",
+    noTags: "Henüz etiket yok",
+    noPersons: "Henüz kişi yok",
   },
   importQueue: {
     dropHere: "Bırak: Kütüphaneye kopyalanacak",
@@ -116,6 +120,12 @@ const tr = {
     volume: "Volume",
     metadata: "Metadata",
     openExternal: "Harici uygulamada aç",
+    empty: "Detayları görmek için bir dosya seç",
+    added: "Eklenme",
+    created: "Oluşturulma",
+    mime: "MIME türü",
+    hash: "İçerik hash'i",
+    offline: "Çevrimdışı",
   },
   common: {
     save: "Kaydet",

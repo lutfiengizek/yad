@@ -14,21 +14,27 @@ import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { t } from "@/i18n";
 import { useAppStore } from "@/stores/app-store";
+import { useLibraryStore } from "@/stores/library-store";
 import { ThemeToggle } from "./theme-toggle";
 
 export function TopBar() {
   const setInspectorOpen = useAppStore((s) => s.setInspectorOpen);
   const inspectorOpen = useAppStore((s) => s.inspectorOpen);
+  const activeLibrary = useLibraryStore((s) =>
+    s.libraries.find((l) => l.id === s.activeLibraryId),
+  );
 
   return (
     <header className="bg-background flex h-12 shrink-0 items-center gap-2 border-b px-2">
       <SidebarTrigger className="text-muted-foreground" />
       <Separator orientation="vertical" className="h-5" />
 
-      {/* Çalışma alanı seçici (placeholder — kütüphane değiştirme M1'de) */}
-      <Button variant="ghost" size="sm" className="gap-1.5">
-        <span className="font-semibold">{t("app.name")}</span>
-        <ChevronsUpDownIcon className="size-3.5 opacity-60" />
+      {/* Çalışma alanı (aktif kütüphane) seçici — değiştirme M5 */}
+      <Button variant="ghost" size="sm" className="max-w-48 gap-1.5">
+        <span className="truncate font-medium">
+          {activeLibrary?.name ?? t("app.name")}
+        </span>
+        <ChevronsUpDownIcon className="size-3.5 shrink-0 opacity-60" />
       </Button>
 
       {/* Arama tetikleyici (komut paleti M3) */}

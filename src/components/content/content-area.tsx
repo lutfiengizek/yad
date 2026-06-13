@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { t } from "@/i18n";
+import { startClipboardImport } from "@/lib/import";
 import { useFileStore } from "@/stores/file-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { FileGrid, FileGridSkeleton } from "./file-grid";
@@ -22,7 +23,7 @@ function EmptyState() {
     <div className="flex flex-col items-center justify-center gap-3 px-8 py-24 text-center">
       <ArchiveIcon className="text-muted-foreground size-10" />
       <p className="text-muted-foreground max-w-xs text-sm">{t("grid.empty")}</p>
-      <Button variant="outline" size="sm">
+      <Button variant="outline" size="sm" onClick={() => void startClipboardImport()}>
         <PlusIcon className="size-4" />
         {t("grid.addFiles")}
       </Button>

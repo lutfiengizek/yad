@@ -87,13 +87,71 @@ CREATE INDEX idx_file_volume ON file(volume_id);
 CREATE INDEX idx_file_hash ON file(content_hash);
 "#;
 
-/// Kütüphane-başına (`<root>/.yad/index.db`) migration'ları uygular (idempotent).
+/// Kütüphane-başına şema, v2 (M2): Katman-2 metadata projeksiyonu (Automerge'den türetilir).
+const LIB_V2: &str = r#"
+CREATE TABLE tag (
+    id        TEXT PRIMARY KEY,
+    name      TEXT NOT NULL,
+    type      TEXT NOT NULL,
+    parent_id TEXT,
+    color     TEXT
+);
+CREATE TABLE file_tag (
+    file_id TEXT NOT NULL,
+    tag_id  TEXT NOT NULL,
+    PRIMARY KEY(file_id, tag_id)
+);
+CREATE INDEX idx_file_tag_tag ON file_tag(tag_id);
+
+CREATE TABLE collection (
+    id        TEXT PRIMARY KEY,
+    name      TEXT NOT NULL,
+    parent_id TEXT,
+    icon      TEXT
+);
+CREATE TABLE file_collection (
+    file_id       TEXT NOT NULL,
+    collection_id TEXT NOT NULL,
+    PRIMARY KEY(file_id, collection_id)
+);
+CREATE INDEX idx_file_collection_coll ON file_collection(collection_id);
+
+CREATE TABLE person (
+    id           TEXT PRIMARY KEY,
+    full_name    TEXT NOT NULL,
+    title        TEXT,
+    organization TEXT,
+    email        TEXT,
+    phone        TEXT,
+    avatar_path  TEXT,
+    bio          TEXT
+);
+CREATE TABLE file_person (
+    file_id   TEXT NOT NULL,
+    person_id TEXT NOT NULL,
+    PRIMARY KEY(file_id, person_id)
+);
+CREATE INDEX idx_file_person_person ON file_person(person_id);
+
+CREATE TABLE note (
+    file_id      TEXT PRIMARY KEY,
+    content_json TEXT NOT NULL,
+    updated_at   TEXT NOT NULL,
+    updated_by   TEXT NOT NULL
+);
+"#;
+
+/// Kütüphane-başına (`<root>/.yad/index.db`) migration'ları sırayla uygular (idempotent).
 pub fn run_library_migrations(conn: &Connection) -> Result<(), AppError> {
     let version: i64 = conn.query_row("PRAGMA user_version", [], |row| row.get(0))?;
 
     if version < 1 {
         conn.execute_batch(LIB_V1)?;
         conn.pragma_update(None, "user_version", 1)?;
+    }
+    if version < 2 {
+        conn.execute_batch(LIB_V2)?;
+        conn.pragma_update(None, "user_version", 2)?;
     }
 
     Ok(())

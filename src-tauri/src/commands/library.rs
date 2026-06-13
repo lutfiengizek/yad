@@ -1,6 +1,7 @@
 //! M1 komutları: kütüphane ve volume yaşam döngüsü.
 
 use crate::error::AppError;
+use crate::metadata::MetadataStore;
 use crate::models::{Library, Volume, VolumeStatus};
 use crate::state::{ActiveLibrary, AppState};
 use crate::{db, volume};
@@ -110,14 +111,37 @@ pub fn list_volumes(conn: &Connection) -> Result<Vec<Volume>, AppError> {
 
 // ---- yaşam döngüsü çekirdeği (tempdir ile test edilebilir) ----
 
-/// Yeni kütüphane oluşturur: disk yerleşimi + registry kaydı + index.db + varsayılan volume.
-/// Açık `index.db` bağlantısını döner (çağıran onu aktif duruma koyar).
+/// Yerel kimlik (actor) id'si — Automerge atfı için. Yoksa "local".
+pub fn current_actor(app_conn: &Connection) -> String {
+    app_conn
+        .query_row("SELECT id FROM identity LIMIT 1", [], |r| {
+            r.get::<_, String>(0)
+        })
+        .optional()
+        .ok()
+        .flatten()
+        .unwrap_or_else(|| "local".to_string())
+}
+
+/// Index.db + Automerge metadata deposunu açar ve metadatayı SQLite'a projekte eder.
+fn open_index_and_metadata(
+    root: &Path,
+    actor_id: &str,
+) -> Result<(Connection, MetadataStore), AppError> {
+    let index = db::open_library_db(&volume::index_db_path(root))?;
+    let store = MetadataStore::open(&volume::metadata_path(root), actor_id)?;
+    crate::metadata::project_to_sqlite(&index, &store.read()?)?;
+    Ok((index, store))
+}
+
+/// Yeni kütüphane oluşturur: disk yerleşimi + registry kaydı + index.db + metadata + varsayılan volume.
 pub fn create_library_core(
     app_conn: &Connection,
     name: &str,
     root_path: &str,
     is_workspace_root: bool,
-) -> Result<(Library, Connection), AppError> {
+    actor_id: &str,
+) -> Result<(Library, Connection, MetadataStore), AppError> {
     if name.trim().is_empty() {
         return Err(AppError::InvalidInput("kütüphane adı boş olamaz".into()));
     }
@@ -137,17 +161,18 @@ pub fn create_library_core(
     };
     register_library(app_conn, &lib)?;
 
-    let index = db::open_library_db(&volume::index_db_path(root))?;
+    let (index, store) = open_index_and_metadata(root, actor_id)?;
     insert_volume(&index, &volume::workspace_root_volume(&id, name, root))?;
 
-    Ok((lib, index))
+    Ok((lib, index, store))
 }
 
-/// Var olan kütüphaneyi açar: registry'den bul, diskte doğrula, index.db aç.
+/// Var olan kütüphaneyi açar: registry'den bul, diskte doğrula, index.db + metadata aç.
 pub fn open_library_core(
     app_conn: &Connection,
     id: &str,
-) -> Result<(Library, Connection), AppError> {
+    actor_id: &str,
+) -> Result<(Library, Connection, MetadataStore), AppError> {
     let lib = get_library(app_conn, id)?
         .ok_or_else(|| AppError::NotFound(format!("kütüphane yok: {id}")))?;
     let root = Path::new(&lib.root_path);
@@ -165,8 +190,8 @@ pub fn open_library_core(
             lib.id, on_disk.library_id
         )));
     }
-    let index = db::open_library_db(&volume::index_db_path(root))?;
-    Ok((lib, index))
+    let (index, store) = open_index_and_metadata(root, actor_id)?;
+    Ok((lib, index, store))
 }
 
 // ---- Tauri komutları ----
@@ -198,11 +223,13 @@ pub fn library_create(
         .app_db
         .lock()
         .map_err(|_| AppError::Unknown("durum kilidi bozuldu".into()))?;
-    let (lib, index) = create_library_core(
+    let actor = current_actor(&app_conn);
+    let (lib, index, store) = create_library_core(
         &app_conn,
         &input.name,
         &input.root_path,
         input.is_workspace_root.unwrap_or(true),
+        &actor,
     )?;
 
     allow_asset_dir(&app, &lib.root_path);
@@ -213,6 +240,8 @@ pub fn library_create(
     *active = Some(ActiveLibrary {
         meta: lib.clone(),
         db: index,
+        metadata: store,
+        actor_id: actor,
     });
     Ok(lib)
 }
@@ -227,7 +256,8 @@ pub fn library_open(
         .app_db
         .lock()
         .map_err(|_| AppError::Unknown("durum kilidi bozuldu".into()))?;
-    let (lib, index) = open_library_core(&app_conn, &id)?;
+    let actor = current_actor(&app_conn);
+    let (lib, index, store) = open_library_core(&app_conn, &id, &actor)?;
 
     allow_asset_dir(&app, &lib.root_path);
     let mut active = state
@@ -237,6 +267,8 @@ pub fn library_open(
     *active = Some(ActiveLibrary {
         meta: lib.clone(),
         db: index,
+        metadata: store,
+        actor_id: actor,
     });
     Ok(lib)
 }
@@ -307,10 +339,14 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let root = dir.path().join("Arsiv");
 
-        let (lib, index) =
-            create_library_core(&app, "Arşivim", root.to_str().unwrap(), true).unwrap();
+        let (lib, index, _store) =
+            create_library_core(&app, "Arşivim", root.to_str().unwrap(), true, "u1").unwrap();
         assert_eq!(lib.name, "Arşivim");
         assert!(volume::is_yad_library(&root));
+        assert!(
+            volume::metadata_path(&root).is_file(),
+            "metadata.automerge yazıldı"
+        );
 
         // Varsayılan workspace-root volume eklendi.
         let vols = list_volumes(&index).unwrap();
@@ -323,20 +359,20 @@ mod tests {
         assert_eq!(libs.len(), 1);
 
         // Tekrar açılabilir.
-        let (opened, _idx) = open_library_core(&app, &lib.id).unwrap();
+        let (opened, _idx, _store) = open_library_core(&app, &lib.id, "u1").unwrap();
         assert_eq!(opened.id, lib.id);
     }
 
     #[test]
     fn open_unknown_library_errors() {
         let app = app_conn();
-        assert!(open_library_core(&app, "yok").is_err());
+        assert!(open_library_core(&app, "yok", "u1").is_err());
     }
 
     #[test]
     fn create_rejects_empty_name() {
         let app = app_conn();
         let dir = tempfile::tempdir().unwrap();
-        assert!(create_library_core(&app, "  ", dir.path().to_str().unwrap(), true).is_err());
+        assert!(create_library_core(&app, "  ", dir.path().to_str().unwrap(), true, "u1").is_err());
     }
 }

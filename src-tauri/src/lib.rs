@@ -3,11 +3,12 @@ mod content;
 mod db;
 mod error;
 mod fs;
+mod metadata;
 mod models;
 mod state;
 mod volume;
 
-use commands::{file, import, library, system};
+use commands::{collection, file, import, library, note, person, system, tag};
 use state::AppState;
 use tauri::Manager;
 
@@ -44,6 +45,30 @@ pub fn run() {
             file::file_set_source_url,
             file::file_open_external,
             file::file_reveal_in_os,
+            tag::tag_list,
+            tag::tag_create,
+            tag::tag_rename,
+            tag::tag_delete,
+            tag::tag_assign,
+            tag::tag_unassign,
+            tag::tag_suggest,
+            collection::collection_list,
+            collection::collection_create,
+            collection::collection_rename,
+            collection::collection_delete,
+            collection::collection_add_files,
+            collection::collection_remove_files,
+            person::person_list,
+            person::person_get,
+            person::person_create,
+            person::person_update,
+            person::person_delete,
+            person::person_link,
+            person::person_unlink,
+            note::note_get,
+            note::note_set,
+            note::file_set_rating,
+            note::file_set_rating_bulk,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

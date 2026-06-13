@@ -1,13 +1,30 @@
 use crate::error::AppError;
+use crate::metadata::MetadataStore;
 use crate::models::Library;
 use rusqlite::Connection;
 use std::path::Path;
 use std::sync::Mutex;
 
-/// Açık (aktif) kütüphane: kayıt bilgisi + `index.db` bağlantısı.
+/// Açık (aktif) kütüphane: kayıt bilgisi + `index.db` bağlantısı + Automerge metadata deposu.
 pub struct ActiveLibrary {
     pub meta: Library,
     pub db: Connection,
+    pub metadata: MetadataStore,
+    /// Yerel kimlik (actor) id'si — mutasyon atfı (örn. not `updated_by`) için.
+    pub actor_id: String,
+}
+
+impl ActiveLibrary {
+    /// Katman-2 metadatasını değiştirir (Automerge'e yaz + diske kalıcı) ve SQLite'a projekte eder.
+    /// Tek giriş noktası: doküman (kaynak) ile görünüm (SQLite) her mutasyonda senkron kalır.
+    pub fn mutate_metadata<F>(&mut self, f: F) -> Result<(), AppError>
+    where
+        F: FnOnce(&mut crate::metadata::MetaDoc),
+    {
+        let meta = self.metadata.mutate(f)?;
+        crate::metadata::project_to_sqlite(&self.db, &meta)?;
+        Ok(())
+    }
 }
 
 /// Uygulama genel durumu (Tauri `manage` ile paylaşılır).

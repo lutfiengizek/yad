@@ -77,9 +77,38 @@ pub fn insert_file(conn: &Connection, f: &FileItem) -> Result<(), AppError> {
     Ok(())
 }
 
+fn collect_ids(conn: &Connection, sql: &str, file_id: &str) -> Result<Vec<String>, AppError> {
+    let mut stmt = conn.prepare(sql)?;
+    let rows = stmt.query_map([file_id], |r| r.get::<_, String>(0))?;
+    rows.collect::<Result<Vec<_>, _>>().map_err(Into::into)
+}
+
+/// Bir dosyanın Katman-2 ilişkilerini (etiket/kişi/koleksiyon id'leri) join tablolarından yükler.
+fn enrich(conn: &Connection, f: &mut FileItem) -> Result<(), AppError> {
+    f.tag_ids = collect_ids(
+        conn,
+        "SELECT tag_id FROM file_tag WHERE file_id = ?1",
+        &f.id,
+    )?;
+    f.person_ids = collect_ids(
+        conn,
+        "SELECT person_id FROM file_person WHERE file_id = ?1",
+        &f.id,
+    )?;
+    f.collection_ids = collect_ids(
+        conn,
+        "SELECT collection_id FROM file_collection WHERE file_id = ?1",
+        &f.id,
+    )?;
+    Ok(())
+}
+
 pub fn get_file(conn: &Connection, id: &str) -> Result<Option<FileItem>, AppError> {
     let sql = format!("SELECT {FILE_COLUMNS} FROM file WHERE id = ?1");
-    let file = conn.query_row(&sql, [id], map_row).optional()?;
+    let mut file = conn.query_row(&sql, [id], map_row).optional()?;
+    if let Some(f) = file.as_mut() {
+        enrich(conn, f)?;
+    }
     Ok(file)
 }
 
@@ -144,7 +173,10 @@ pub fn list_files(conn: &Connection, q: &SearchQuery) -> Result<Page<FileItem>, 
 
     let mut stmt = conn.prepare(&list_sql)?;
     let rows = stmt.query_map(params_from_iter(vals.iter()), map_row)?;
-    let items = rows.collect::<Result<Vec<_>, _>>()?;
+    let mut items = rows.collect::<Result<Vec<_>, _>>()?;
+    for f in items.iter_mut() {
+        enrich(conn, f)?;
+    }
 
     Ok(Page {
         items,

@@ -57,9 +57,12 @@ Use these via Tailwind classes (e.g., `bg-primary`, `text-muted-foreground`, `bo
 
 ## Fonts
 
-- **Sans:** Roboto — used for all body text and UI
-- **Mono:** JetBrains Mono — used for code blocks and technical content
-- **Do NOT add any other fonts.** No Inter, no Geist, no system-ui overrides.
+Fonts come from the solar-dusk theme in `globals.css`. Use the token classes (`font-sans`, `font-serif`, `font-mono`); never hardcode a family.
+
+- **Sans (`font-sans`): Oxanium** — UI chrome, headings, brand, numeric/stat displays. Default font.
+- **Serif (`font-serif`): Merriweather** — long-form reading text: notes, person bios, article-like content (editorial/journalism feel).
+- **Mono (`font-mono`): Fira Code** — hashes, technical/identifier values.
+- **Do NOT add any other fonts.** No Inter, no Geist, no Roboto, no system-ui overrides. Only the three solar-dusk families above.
 
 ## Layout
 

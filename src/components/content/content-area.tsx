@@ -18,6 +18,7 @@ import { useFileStore } from "@/stores/file-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { FileGrid, FileGridSkeleton } from "./file-grid";
 import { FileList } from "./file-list";
+import { FilterControls } from "./filter-controls";
 
 function EmptyState() {
   return (
@@ -64,6 +65,8 @@ export function ContentArea() {
           {total} {t("grid.itemCount")}
         </span>
         <div className="flex-1" />
+
+        <FilterControls />
 
         {view === "grid" && (
           <div className="flex items-center">

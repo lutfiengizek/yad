@@ -55,6 +55,11 @@ const tr = {
     noCollections: "Henüz koleksiyon yok",
     noTags: "Henüz etiket yok",
     noPersons: "Henüz kişi yok",
+    newCollection: "Yeni koleksiyon",
+    collectionName: "Koleksiyon adı",
+    addCollection: "Koleksiyon ekle",
+    newPerson: "Yeni kişi",
+    addPerson: "Kişi ekle",
   },
   importQueue: {
     dropHere: "Bırak: Kütüphaneye kopyalanacak",
@@ -140,7 +145,10 @@ const tr = {
     noResults: "Sonuç yok",
     searchTag: "Etiket ara veya oluştur",
     searchPerson: "Kişi ara veya oluştur",
+    searchCollection: "Koleksiyon ara veya oluştur",
     newPersonName: "Ad Soyad",
+    collections: "Koleksiyonlar",
+    addCollection: "Koleksiyona ekle",
   },
   common: {
     save: "Kaydet",

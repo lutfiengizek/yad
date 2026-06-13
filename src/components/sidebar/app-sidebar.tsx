@@ -1,6 +1,7 @@
 import { Fragment } from "react";
 import {
   ClockIcon,
+  FolderIcon,
   GalleryVerticalEndIcon,
   HardDriveIcon,
   LayersIcon,
@@ -22,9 +23,11 @@ import {
 import { cn } from "@/lib/utils";
 import { t } from "@/i18n";
 import type { Tag, Volume } from "@/lib/api/types";
+import { useCollectionStore } from "@/stores/collection-store";
 import { useFileStore } from "@/stores/file-store";
 import { useTagStore } from "@/stores/tag-store";
 import { useVolumeStore } from "@/stores/volume-store";
+import { CreateCollectionDialog } from "./create-collection-dialog";
 
 function CountBadge({ count }: { count: number }) {
   if (count <= 0) return null;
@@ -55,6 +58,7 @@ function EmptyHint({ label }: { label: string }) {
 export function AppSidebar() {
   const volumes = useVolumeStore((s) => s.volumes);
   const tags = useTagStore((s) => s.tags);
+  const collections = useCollectionStore((s) => s.collections);
   const activeKey = useFileStore((s) => s.activeKey);
   const selectView = useFileStore((s) => s.selectView);
 
@@ -125,13 +129,35 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* KOLEKSİYONLAR — M2 */}
+        {/* KOLEKSİYONLAR */}
         <SidebarGroup>
           <SidebarGroupLabel>
             {t("library.sectionCollections")}
           </SidebarGroupLabel>
+          <CreateCollectionDialog />
           <SidebarGroupContent>
-            <EmptyHint label={t("library.noCollections")} />
+            {collections.length === 0 ? (
+              <EmptyHint label={t("library.noCollections")} />
+            ) : (
+              <SidebarMenu>
+                {collections.map((c) => (
+                  <SidebarMenuItem key={c.id}>
+                    <SidebarMenuButton
+                      isActive={activeKey === `col:${c.id}`}
+                      onClick={() =>
+                        selectView(`col:${c.id}`, { collectionId: c.id })
+                      }
+                    >
+                      <FolderIcon />
+                      <span className="flex-1 truncate text-left">
+                        {c.name}
+                      </span>
+                      <CountBadge count={c.count} />
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            )}
           </SidebarGroupContent>
         </SidebarGroup>
 

@@ -132,6 +132,13 @@ export interface Page<T> {
   total: number;
 }
 
+export interface SearchGlobalResult {
+  files: FileItem[];
+  tags: Tag[];
+  persons: Person[];
+  collections: Collection[];
+}
+
 export interface Identity {
   id: Id; // yerel kullanıcı (kişi) id
   displayName: string;

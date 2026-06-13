@@ -18,6 +18,7 @@ import type {
   Page,
   Person,
   PersonInput,
+  SearchGlobalResult,
   SearchQuery,
   Settings,
   Tag,
@@ -98,6 +99,10 @@ export interface Api {
 
   fileSetRating(input: { id: Id; rating: number }): Promise<FileItem>;
   fileSetRatingBulk(input: { ids: Id[]; rating: number }): Promise<void>;
+
+  // M3 — arama
+  search(query: SearchQuery): Promise<Page<FileItem>>;
+  searchGlobal(text: string): Promise<SearchGlobalResult>;
 
   // Events (backend emit → frontend listen) — payload tipleri sözleşmeden.
   onImportProgress(cb: (p: ImportProgress) => void): Unsubscribe;

@@ -505,6 +505,33 @@ export const mockApi: Api = {
     return delay(undefined);
   },
 
+  // --- M3: arama ---
+  search: (query) => mockApi.fileList(query),
+
+  searchGlobal: (text) => {
+    const q = text.trim().toLowerCase();
+    if (!q) {
+      return delay({ files: [], tags: [], persons: [], collections: [] });
+    }
+    return delay({
+      files: clone(
+        state.files.filter((f) => f.name.toLowerCase().includes(q)).slice(0, 8),
+      ),
+      tags: state.tags
+        .filter((t) => t.name.toLowerCase().includes(q))
+        .slice(0, 6)
+        .map(tagWithCount),
+      persons: state.persons
+        .filter((p) => p.fullName.toLowerCase().includes(q))
+        .slice(0, 6)
+        .map(personWithCount),
+      collections: state.collections
+        .filter((c) => c.name.toLowerCase().includes(q))
+        .slice(0, 6)
+        .map(collectionWithCount),
+    });
+  },
+
   // --- Events ---
   onImportProgress: (cb) => state.bus.on("import:progress", cb),
   onVolumeChanged: (cb) => state.bus.on("volume:changed", cb),

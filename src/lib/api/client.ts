@@ -78,6 +78,9 @@ export const clientApi: Api = {
   fileSetRating: (input) => call("file_set_rating", { input }),
   fileSetRatingBulk: (input) => call("file_set_rating_bulk", { input }),
 
+  search: (query) => call("search", { query }),
+  searchGlobal: (text) => call("search_global", { text }),
+
   onImportProgress: (cb) => tauriListen("import:progress", cb),
   onVolumeChanged: (cb) => tauriListen("volume:changed", cb),
 };

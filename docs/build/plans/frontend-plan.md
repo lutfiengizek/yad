@@ -41,13 +41,19 @@
 - [x] M3.4 Filtre (tür/rating/çevrimdışı) + sıralama; file-store base+filters.
 - [x] M3.5 Loupe (E) + Karşılaştır (C) + tek-tuş kısayollar (G/L/E/C).
 
+## M4 — Sürüm & Aktivite & Çöp ✓
+- [x] M4.1 API version/activity/trash + activity/trash store + activity:new event.
+- [x] M4.2 Sürüm geçmişi (inspector Geçmiş): zaman çizgisi + sürüme dön.
+- [x] M4.3 Aktivite akışı (gruplu, i18n cümleler, geri al); status-bar zili açar.
+- [x] M4.4 Çöp kutusu (geri al / kalıcı sil) + sidebar girişi + Del kısayolu.
+
 ## Tasarım cilası (kullanıcı geri bildirimi)
 Sidebar/topbar/statusbar/inspector tutarlılığı: etkileşimsiz metin butona sarılmaz,
 placeholder'lar temiz, çalışma alanı aktif kütüphane adını gösterir. Token-tabanlı,
 hardcoded renk yok.
 
 ## Durum
-M0+M1+M2+M3 tamam: 42 test geçer, `tsc`/`pnpm build` temiz. Tümü mock üzerinde çalışır
+M0+M1+M2+M3+M4 tamam: 50 test geçer, `tsc`/`pnpm build` temiz. Tümü mock üzerinde çalışır
 (`VITE_USE_MOCK` varsayılan; onboarding'i görmek için `VITE_MOCK_EMPTY=true`).
 Görsel açık/koyu tema piksel kontrolü çalışan uygulamada elle doğrulanmalı
 (tarayıcı otomasyonu yok; tüm bileşenler token-tabanlı → yapısal olarak tema-uyumlu).

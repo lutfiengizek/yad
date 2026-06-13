@@ -3,6 +3,12 @@ const tr = {
     name: "YAD",
     version: "v0.1.0",
   },
+  topbar: {
+    theme: "Tema",
+    themeLight: "Açık",
+    themeDark: "Koyu",
+    themeSystem: "Sistem",
+  },
   sidebar: {
     search: "Ara",
     workspace: "Workspace",

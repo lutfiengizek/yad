@@ -9,7 +9,24 @@
 //! Gerçek eşler-arası akış 2-cihaz testiyle doğrulanır.
 
 use crate::error::AppError;
-use iroh::{Endpoint, RelayMode};
+use iroh::{Endpoint, RelayMode, SecretKey};
+
+/// Yeni bir düğüm gizli anahtarı üretir (hex). Kalıcı kimlik çapası (PRD §7.1).
+pub fn generate_secret_hex() -> String {
+    let sk = SecretKey::generate(rand::rngs::OsRng);
+    hex::encode(sk.to_bytes())
+}
+
+/// Gizli anahtar (hex) → NodeId (public key, dize). Geçersiz hex → hata.
+pub fn node_id_from_secret_hex(secret_hex: &str) -> Result<String, AppError> {
+    let bytes = hex::decode(secret_hex)
+        .map_err(|_| AppError::InvalidInput("geçersiz node secret hex".into()))?;
+    let arr: [u8; 32] = bytes
+        .try_into()
+        .map_err(|_| AppError::InvalidInput("node secret 32 bayt olmalı".into()))?;
+    let sk = SecretKey::from_bytes(&arr);
+    Ok(sk.public().to_string())
+}
 
 /// Bir Iroh endpoint'i (düğüm) başlatır. Relay devre dışı (yerel/offline PoC);
 /// üretimde self-hosted relay + discovery yapılandırılır (PRD §8.3).

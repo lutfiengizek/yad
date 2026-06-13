@@ -83,6 +83,14 @@ pub fn run() {
             trash::trash_list,
             trash::file_restore,
             trash::file_delete_permanent,
+            commands::collab::member_list,
+            commands::collab::member_set_role,
+            commands::collab::member_remove,
+            commands::collab::invite_create,
+            commands::collab::invite_accept,
+            commands::collab::sync_status,
+            commands::conflict::conflict_list,
+            commands::conflict::conflict_resolve,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

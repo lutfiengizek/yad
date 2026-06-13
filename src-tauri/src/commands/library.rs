@@ -224,6 +224,12 @@ pub fn library_create(
         .lock()
         .map_err(|_| AppError::Unknown("durum kilidi bozuldu".into()))?;
     let (actor_id, actor_name) = current_identity(&app_conn);
+    let node_id: Option<String> = app_conn
+        .query_row("SELECT node_id FROM identity LIMIT 1", [], |r| {
+            r.get::<_, Option<String>>(0)
+        })
+        .optional()?
+        .flatten();
     let (lib, index, store) = create_library_core(
         &app_conn,
         &input.name,
@@ -233,17 +239,21 @@ pub fn library_create(
     )?;
 
     allow_asset_dir(&app, &lib.root_path);
-    let mut active = state
-        .active
-        .lock()
-        .map_err(|_| AppError::Unknown("aktif kütüphane kilidi bozuldu".into()))?;
-    *active = Some(ActiveLibrary {
+    let mut al = ActiveLibrary {
         meta: lib.clone(),
         db: index,
         metadata: store,
         actor_id,
         actor_name,
-    });
+    };
+    // Kurucu = Owner üye (atıflı işbirliği için günden bir).
+    crate::commands::collab::ensure_owner_member(&mut al, node_id)?;
+
+    let mut active = state
+        .active
+        .lock()
+        .map_err(|_| AppError::Unknown("aktif kütüphane kilidi bozuldu".into()))?;
+    *active = Some(al);
     Ok(lib)
 }
 

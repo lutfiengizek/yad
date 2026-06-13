@@ -5,27 +5,33 @@
 
 mod activity;
 mod collection;
+mod conflict;
 mod file_item;
 mod identity;
 mod library;
+mod member;
 mod note;
 mod person;
 mod progress;
 mod search;
 mod settings;
+mod sync;
 mod tag;
 mod version;
 
 pub use activity::ActivityItem;
 pub use collection::Collection;
+pub use conflict::Conflict;
 pub use file_item::{FileItem, FileKind};
 pub use identity::{Identity, IdentityInput};
 pub use library::{Library, Volume, VolumeStatus};
+pub use member::{MemberInfo, Role};
 pub use note::NoteDoc;
 pub use person::{Person, PersonInput};
 pub use progress::{ImportPhase, ImportProgress};
 pub use search::{Page, SearchQuery, SortBy, SortDir};
 pub use settings::Settings;
+pub use sync::{SyncState, SyncStatus};
 pub use tag::{Tag, TagType};
 pub use version::Version;
 

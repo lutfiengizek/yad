@@ -33,6 +33,9 @@ CREATE TABLE identity (
 );
 "#;
 
+/// App-global şema, v2 (M5): düğüm gizli anahtarı (NodeId kimlik çapası).
+const APP_V2: &str = "ALTER TABLE identity ADD COLUMN node_secret TEXT;";
+
 /// App-global migration'ları sırayla uygular (idempotent).
 pub fn run_app_migrations(conn: &Connection) -> Result<(), AppError> {
     let version: i64 = conn.query_row("PRAGMA user_version", [], |row| row.get(0))?;
@@ -40,6 +43,10 @@ pub fn run_app_migrations(conn: &Connection) -> Result<(), AppError> {
     if version < 1 {
         conn.execute_batch(APP_V1)?;
         conn.pragma_update(None, "user_version", 1)?;
+    }
+    if version < 2 {
+        conn.execute_batch(APP_V2)?;
+        conn.pragma_update(None, "user_version", 2)?;
     }
 
     Ok(())
@@ -206,9 +213,34 @@ pub fn run_library_migrations(conn: &Connection) -> Result<(), AppError> {
         conn.execute_batch(LIB_V4)?;
         conn.pragma_update(None, "user_version", 4)?;
     }
+    if version < 5 {
+        conn.execute_batch(LIB_V5)?;
+        conn.pragma_update(None, "user_version", 5)?;
+    }
 
     Ok(())
 }
+
+/// Kütüphane-başına şema, v5 (M5): üyeler/roller (Automerge'den projekte) + çatışmalar (yerel).
+const LIB_V5: &str = r#"
+CREATE TABLE member (
+    person_id TEXT PRIMARY KEY,
+    role      TEXT NOT NULL,
+    node_id   TEXT
+);
+
+CREATE TABLE conflict (
+    id           TEXT PRIMARY KEY,
+    file_id      TEXT NOT NULL,
+    field        TEXT NOT NULL,
+    mine         TEXT NOT NULL,
+    theirs       TEXT NOT NULL,
+    mine_author  TEXT NOT NULL,
+    theirs_author TEXT NOT NULL,
+    created_at   TEXT NOT NULL,
+    resolved     INTEGER NOT NULL DEFAULT 0
+);
+"#;
 
 #[cfg(test)]
 mod tests {
@@ -222,7 +254,7 @@ mod tests {
         let version: i64 = conn
             .query_row("PRAGMA user_version", [], |r| r.get(0))
             .unwrap();
-        assert_eq!(version, 1);
+        assert_eq!(version, 2);
 
         // Tablolar mevcut mu?
         for table in ["library", "settings", "identity"] {
@@ -246,6 +278,6 @@ mod tests {
         let version: i64 = conn
             .query_row("PRAGMA user_version", [], |r| r.get(0))
             .unwrap();
-        assert_eq!(version, 1);
+        assert_eq!(version, 2);
     }
 }

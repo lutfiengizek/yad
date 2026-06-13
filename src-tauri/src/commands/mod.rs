@@ -1,5 +1,7 @@
 pub mod activity;
+pub mod collab;
 pub mod collection;
+pub mod conflict;
 pub mod file;
 pub mod import;
 pub mod library;

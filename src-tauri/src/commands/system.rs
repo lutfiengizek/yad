@@ -91,24 +91,38 @@ fn identity_set_impl(conn: &Connection, input: IdentityInput) -> Result<Identity
         return Err(AppError::InvalidInput("displayName boş olamaz".into()));
     }
 
-    // Mevcut id korunur; yoksa yeni uuid üretilir (tek satırlık kimlik).
-    let existing_id: Option<String> = conn
-        .query_row("SELECT id FROM identity LIMIT 1", [], |r| r.get(0))
+    // Mevcut id + node anahtarı korunur; yoksa üretilir (kimlik çapası = anahtar, PRD §7.1).
+    let existing: Option<(String, Option<String>)> = conn
+        .query_row("SELECT id, node_secret FROM identity LIMIT 1", [], |r| {
+            Ok((r.get(0)?, r.get(1)?))
+        })
         .optional()?;
-    let id = existing_id.unwrap_or_else(|| uuid::Uuid::new_v4().to_string());
+    let (id, node_secret) = match existing {
+        Some((id, Some(secret))) => (id, secret),
+        Some((id, None)) => (id, crate::p2p::generate_secret_hex()),
+        None => (
+            uuid::Uuid::new_v4().to_string(),
+            crate::p2p::generate_secret_hex(),
+        ),
+    };
+    let node_id = crate::p2p::node_id_from_secret_hex(&node_secret)?;
 
     conn.execute(
-        "INSERT INTO identity (id, display_name, organization, avatar_path, node_id)
-         VALUES (?1, ?2, ?3, ?4, NULL)
+        "INSERT INTO identity (id, display_name, organization, avatar_path, node_id, node_secret)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6)
          ON CONFLICT(id) DO UPDATE SET
            display_name = excluded.display_name,
            organization = excluded.organization,
-           avatar_path  = excluded.avatar_path",
+           avatar_path  = excluded.avatar_path,
+           node_id      = excluded.node_id,
+           node_secret  = excluded.node_secret",
         params![
             id,
             input.display_name,
             input.organization,
-            input.avatar_path
+            input.avatar_path,
+            node_id,
+            node_secret
         ],
     )?;
 

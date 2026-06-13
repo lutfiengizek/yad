@@ -54,6 +54,13 @@ pub struct NoteData {
     pub updated_by: String,
 }
 
+/// İşbirliği üyesi (rol + Iroh düğümü). Senkronlanır → workspace geneli rol bilgisi.
+#[derive(Debug, Clone, Default, Reconcile, Hydrate)]
+pub struct MemberData {
+    pub role: String,
+    pub node_id: Option<String>,
+}
+
 /// Kütüphane başına tek Automerge dokümanının kök şeması.
 #[derive(Debug, Clone, Default, Reconcile, Hydrate)]
 pub struct MetaDoc {
@@ -62,6 +69,7 @@ pub struct MetaDoc {
     pub persons: HashMap<String, PersonData>,
     pub files: HashMap<String, FileMeta>,
     pub notes: HashMap<String, NoteData>,
+    pub members: HashMap<String, MemberData>,
 }
 
 /// Automerge dokümanını sahiplenen depo; mutasyonu actor atıflı uygular ve diske yazar.
@@ -115,6 +123,25 @@ impl MetadataStore {
         Ok(meta)
     }
 
+    /// Senkron için: dokümanı serileştirir (eşe gönderilecek tam durum).
+    #[allow(dead_code)] // M5 senkron motoru + test
+    pub fn export_bytes(&mut self) -> Vec<u8> {
+        self.doc.save()
+    }
+
+    /// Senkron için: eşten gelen dokümanı **çatışmasız** birleştirir (Automerge) ve diske yazar.
+    /// (M5: tam-doküman değişimi; delta sync protokolü sonraki optimizasyon.)
+    #[allow(dead_code)] // M5 senkron motoru + test
+    pub fn merge_bytes(&mut self, other: &[u8]) -> Result<(), AppError> {
+        let mut other_doc = AutoCommit::load(other)
+            .map_err(|e| AppError::Unknown(format!("automerge merge yükleme: {e}")))?;
+        self.doc
+            .merge(&mut other_doc)
+            .map_err(|e| AppError::Conflict(format!("automerge merge: {e}")))?;
+        self.persist()?;
+        Ok(())
+    }
+
     fn persist(&mut self) -> Result<(), AppError> {
         let bytes = self.doc.save();
         if let Some(parent) = self.path.parent() {
@@ -148,6 +175,7 @@ pub fn project_to_sqlite(conn: &Connection, meta: &MetaDoc) -> Result<(), AppErr
         "collection",
         "person",
         "note",
+        "member",
     ] {
         tx.execute(&format!("DELETE FROM {table}"), [])?;
     }
@@ -195,6 +223,12 @@ pub fn project_to_sqlite(conn: &Connection, meta: &MetaDoc) -> Result<(), AppErr
         tx.execute(
             "INSERT INTO note (file_id, content_json, updated_at, updated_by) VALUES (?1,?2,?3,?4)",
             params![file_id, n.content_json, n.updated_at, n.updated_by],
+        )?;
+    }
+    for (person_id, mem) in &meta.members {
+        tx.execute(
+            "INSERT INTO member (person_id, role, node_id) VALUES (?1,?2,?3)",
+            params![person_id, mem.role, mem.node_id],
         )?;
     }
 
@@ -260,6 +294,52 @@ mod tests {
         assert_eq!(meta.tags.get("t1").unwrap().name, "Deprem");
         assert_eq!(meta.files.get("f1").unwrap().rating, 4);
         assert_eq!(meta.files.get("f1").unwrap().tags, vec!["t1".to_string()]);
+    }
+
+    #[test]
+    fn export_and_merge_bytes_syncs_two_stores() {
+        // Gerçek katılım: B, A'nın dokümanını KLONLAYARAK başlar (ortak ata) — sonra ıraksar.
+        let dir = tempfile::tempdir().unwrap();
+        let a_path = dir.path().join("a.automerge");
+        let b_path = dir.path().join("b.automerge");
+
+        let mut a = MetadataStore::open(&a_path, "a").unwrap();
+        a.mutate(|m| {
+            m.tags.insert(
+                "t1".into(),
+                TagData {
+                    name: "A-etiket".into(),
+                    tag_type: "free".into(),
+                    ..Default::default()
+                },
+            );
+        })
+        .unwrap();
+
+        // B, A'nın güncel dokümanını alarak (davet/klon) açılır.
+        std::fs::write(&b_path, a.export_bytes()).unwrap();
+        let mut b = MetadataStore::open(&b_path, "b").unwrap();
+        assert!(b.read().unwrap().tags.contains_key("t1"));
+
+        b.mutate(|m| {
+            m.tags.insert(
+                "t2".into(),
+                TagData {
+                    name: "B-etiket".into(),
+                    tag_type: "free".into(),
+                    ..Default::default()
+                },
+            );
+        })
+        .unwrap();
+
+        // B'nin değişikliğini A'ya senkronla (tam-doküman değişimi, çatışmasız).
+        a.merge_bytes(&b.export_bytes()).unwrap();
+
+        assert!(a.read().unwrap().tags.contains_key("t1"));
+        assert!(a.read().unwrap().tags.contains_key("t2"));
+        assert!(b.read().unwrap().tags.contains_key("t1"));
+        assert!(b.read().unwrap().tags.contains_key("t2"));
     }
 
     #[test]

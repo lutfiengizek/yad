@@ -3,6 +3,7 @@
 // Milestone ilerledikçe genişler (M1: kütüphane/dosya, M2: organizasyon, ...).
 
 import type {
+  ActivityItem,
   AppInitResult,
   BatchHandle,
   Collection,
@@ -23,6 +24,7 @@ import type {
   Settings,
   Tag,
   TagType,
+  Version,
   Volume,
 } from "./types";
 
@@ -104,7 +106,23 @@ export interface Api {
   search(query: SearchQuery): Promise<Page<FileItem>>;
   searchGlobal(text: string): Promise<SearchGlobalResult>;
 
+  // M4 — sürüm, aktivite, çöp
+  versionList(fileId: Id): Promise<Version[]>;
+  versionRestore(input: { fileId: Id; versionId: Id }): Promise<FileItem>;
+  activityList(input?: {
+    actorId?: Id;
+    objectType?: string;
+    since?: string;
+    limit?: number;
+  }): Promise<ActivityItem[]>;
+  activityUndo(activityId: Id): Promise<void>;
+  fileMoveToTrash(input: { ids: Id[] }): Promise<void>;
+  trashList(): Promise<FileItem[]>;
+  fileRestore(input: { ids: Id[] }): Promise<void>;
+  fileDeletePermanent(input: { ids: Id[] }): Promise<void>;
+
   // Events (backend emit → frontend listen) — payload tipleri sözleşmeden.
   onImportProgress(cb: (p: ImportProgress) => void): Unsubscribe;
   onVolumeChanged(cb: (v: Volume) => void): Unsubscribe;
+  onActivityNew(cb: (a: ActivityItem) => void): Unsubscribe;
 }

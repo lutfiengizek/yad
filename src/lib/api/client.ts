@@ -81,6 +81,16 @@ export const clientApi: Api = {
   search: (query) => call("search", { query }),
   searchGlobal: (text) => call("search_global", { text }),
 
+  versionList: (fileId) => call("version_list", { fileId }),
+  versionRestore: (input) => call("version_restore", { input }),
+  activityList: (input) => call("activity_list", { input }),
+  activityUndo: (activityId) => call("activity_undo", { activityId }),
+  fileMoveToTrash: (input) => call("file_move_to_trash", { input }),
+  trashList: () => call("trash_list"),
+  fileRestore: (input) => call("file_restore", { input }),
+  fileDeletePermanent: (input) => call("file_delete_permanent", { input }),
+
   onImportProgress: (cb) => tauriListen("import:progress", cb),
   onVolumeChanged: (cb) => tauriListen("volume:changed", cb),
+  onActivityNew: (cb) => tauriListen("activity:new", cb),
 };

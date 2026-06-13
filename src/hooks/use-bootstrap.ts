@@ -4,6 +4,8 @@
 import { useEffect } from "react";
 import { useTheme } from "next-themes";
 
+import { api } from "@/lib/api";
+import { useActivityStore } from "@/stores/activity-store";
 import { useAppStore } from "@/stores/app-store";
 import { useCollectionStore } from "@/stores/collection-store";
 import { useFileStore } from "@/stores/file-store";
@@ -17,6 +19,9 @@ export function useBootstrap() {
 
   useEffect(() => {
     let cancelled = false;
+    const unsubscribe = api.onActivityNew((a) =>
+      useActivityStore.getState().prepend(a),
+    );
     void (async () => {
       await useSettingsStore.getState().load();
       await useLibraryStore.getState().load();
@@ -31,10 +36,12 @@ export function useBootstrap() {
         useTagStore.getState().load(),
         useCollectionStore.getState().load(),
         usePersonStore.getState().load(),
+        useActivityStore.getState().load(),
       ]);
     })();
     return () => {
       cancelled = true;
+      unsubscribe();
     };
   }, [setTheme]);
 }

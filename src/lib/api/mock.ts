@@ -7,6 +7,7 @@ import { MockEventBus } from "./events";
 import {
   NOW,
   defaultSettings,
+  sampleActivities,
   sampleCollections,
   sampleFiles,
   sampleIdentity,
@@ -14,9 +15,11 @@ import {
   sampleNotes,
   samplePersons,
   sampleTags,
+  sampleVersions,
   sampleVolumes,
 } from "./mock-fixtures";
 import type {
+  ActivityItem,
   Collection,
   FileItem,
   FileKind,
@@ -27,6 +30,7 @@ import type {
   Person,
   Settings,
   Tag,
+  Version,
   Volume,
 } from "./types";
 
@@ -66,6 +70,10 @@ class MockState {
   collections: Collection[] = START_EMPTY ? [] : clone(sampleCollections);
   persons: Person[] = START_EMPTY ? [] : clone(samplePersons);
   notes: NoteDoc[] = START_EMPTY ? [] : clone(sampleNotes);
+  versions: Version[] = START_EMPTY ? [] : clone(sampleVersions);
+  activities: ActivityItem[] = START_EMPTY ? [] : clone(sampleActivities);
+  trashedFiles: FileItem[] = [];
+  trashedAt: Record<string, string> = {};
   bus = new MockEventBus();
   counters = {
     library: 1,
@@ -75,6 +83,8 @@ class MockState {
     tag: 0,
     collection: 0,
     person: 0,
+    activity: 0,
+    version: 0,
   };
 }
 
@@ -107,6 +117,23 @@ function personWithCount(p: Person): Person {
     ...p,
     fileCount: state.files.filter((f) => f.personIds.includes(p.id)).length,
   };
+}
+
+// Yeni aktivite üret + activity:new yay.
+function pushActivity(
+  a: Pick<ActivityItem, "action" | "objectType" | "objectId" | "objectName"> &
+    Partial<Pick<ActivityItem, "params" | "undoable">>,
+): void {
+  const item: ActivityItem = {
+    id: `act-new-${++state.counters.activity}`,
+    actorId: state.identity?.id ?? "person-self",
+    actorName: state.identity?.displayName ?? "Ben",
+    createdAt: NOW,
+    undoable: false,
+    ...a,
+  };
+  state.activities.unshift(item);
+  state.bus.emit("activity:new", item);
 }
 
 // İçe aktarma ilerlemesini kademeli simüle eder; bitince dosyaları ekler.
@@ -505,6 +532,115 @@ export const mockApi: Api = {
     return delay(undefined);
   },
 
+  // --- M4: sürüm ---
+  versionList: (fileId) =>
+    delay(clone(state.versions.filter((v) => v.fileId === fileId))),
+
+  versionRestore: ({ fileId, versionId }) => {
+    const version = state.versions.find((v) => v.id === versionId);
+    const file = findFile(fileId);
+    if (!version) {
+      throw { code: "not_found", message: `Sürüm bulunamadı: ${versionId}` };
+    }
+    state.versions.forEach((v) => {
+      if (v.fileId === fileId) v.isCurrent = false;
+    });
+    state.versions.unshift({
+      id: `ver-new-${++state.counters.version}`,
+      fileId,
+      contentHash: version.contentHash,
+      sizeBytes: version.sizeBytes,
+      label: `${version.label} (geri yüklendi)`,
+      authorId: state.identity?.id ?? "person-self",
+      authorName: state.identity?.displayName ?? "Ben",
+      createdAt: NOW,
+      isCurrent: true,
+    });
+    file.contentHash = version.contentHash;
+    file.sizeBytes = version.sizeBytes;
+    file.modifiedAt = NOW;
+    pushActivity({
+      action: "version.restore",
+      objectType: "file",
+      objectId: fileId,
+      objectName: file.name,
+    });
+    return delay(clone(file));
+  },
+
+  // --- M4: aktivite ---
+  activityList: (input) => {
+    let items = [...state.activities];
+    if (input?.actorId)
+      items = items.filter((a) => a.actorId === input.actorId);
+    if (input?.objectType)
+      items = items.filter((a) => a.objectType === input.objectType);
+    if (input?.since)
+      items = items.filter((a) => a.createdAt >= input.since!);
+    items.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+    if (input?.limit) items = items.slice(0, input.limit);
+    return delay(clone(items));
+  },
+
+  activityUndo: (activityId) => {
+    const activity = state.activities.find((a) => a.id === activityId);
+    if (activity?.action === "file.trash") {
+      const restored = state.trashedFiles.find(
+        (f) => f.id === activity.objectId,
+      );
+      if (restored) {
+        state.trashedFiles = state.trashedFiles.filter(
+          (f) => f.id !== restored.id,
+        );
+        delete state.trashedAt[restored.id];
+        state.files.unshift(restored);
+      }
+      state.activities = state.activities.filter((a) => a.id !== activityId);
+    }
+    return delay(undefined);
+  },
+
+  // --- M4: çöp ---
+  fileMoveToTrash: ({ ids }) => {
+    ids.forEach((id) => {
+      const file = state.files.find((f) => f.id === id);
+      if (!file) return;
+      file.modifiedAt = NOW;
+      state.files = state.files.filter((f) => f.id !== id);
+      state.trashedFiles.unshift(file);
+      state.trashedAt[id] = NOW;
+      pushActivity({
+        action: "file.trash",
+        objectType: "file",
+        objectId: id,
+        objectName: file.name,
+        undoable: true,
+      });
+    });
+    return delay(undefined);
+  },
+
+  trashList: () => delay(clone(state.trashedFiles)),
+
+  fileRestore: ({ ids }) => {
+    ids.forEach((id) => {
+      const file = state.trashedFiles.find((f) => f.id === id);
+      if (!file) return;
+      state.trashedFiles = state.trashedFiles.filter((f) => f.id !== id);
+      delete state.trashedAt[id];
+      state.files.unshift(file);
+    });
+    return delay(undefined);
+  },
+
+  fileDeletePermanent: ({ ids }) => {
+    state.trashedFiles = state.trashedFiles.filter((f) => !ids.includes(f.id));
+    state.versions = state.versions.filter((v) => !ids.includes(v.fileId));
+    state.notes = state.notes.filter((n) => !ids.includes(n.fileId));
+    ids.forEach((id) => delete state.trashedAt[id]);
+    return delay(undefined);
+  },
+
   // --- M3: arama ---
   search: (query) => mockApi.fileList(query),
 
@@ -535,4 +671,5 @@ export const mockApi: Api = {
   // --- Events ---
   onImportProgress: (cb) => state.bus.on("import:progress", cb),
   onVolumeChanged: (cb) => state.bus.on("volume:changed", cb),
+  onActivityNew: (cb) => state.bus.on("activity:new", cb),
 };

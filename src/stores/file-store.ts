@@ -18,6 +18,7 @@ interface FileState {
   setFilters: (patch: SearchQuery) => Promise<void>;
   reload: () => Promise<void>;
   select: (id: string | null) => void;
+  moveToTrash: (ids: string[]) => Promise<void>;
 }
 
 export const useFileStore = create<FileState>((set, get) => ({
@@ -43,4 +44,9 @@ export const useFileStore = create<FileState>((set, get) => ({
     set({ files: page.items, total: page.total, loading: false });
   },
   select: (id) => set({ selectedId: id }),
+  moveToTrash: async (ids) => {
+    await api.fileMoveToTrash({ ids });
+    if (ids.includes(get().selectedId ?? "")) set({ selectedId: null });
+    await get().reload();
+  },
 }));

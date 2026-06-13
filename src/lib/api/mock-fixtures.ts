@@ -2,6 +2,7 @@
 // Milestone ilerledikçe genişler (M1: volume/dosya fixture'ları).
 
 import type {
+  ActivityItem,
   Collection,
   FileItem,
   Identity,
@@ -10,6 +11,7 @@ import type {
   Person,
   Settings,
   Tag,
+  Version,
   Volume,
 } from "./types";
 
@@ -131,6 +133,79 @@ export const samplePersons: Person[] = [
     title: "Saha Muhabiri",
     organization: "Gazete X",
     fileCount: 0,
+  },
+];
+
+export const sampleVersions: Version[] = [
+  {
+    id: "ver-1c",
+    fileId: "f-1",
+    contentHash: "blake3-f-1",
+    sizeBytes: 1_200_000,
+    label: "Acil etiketi eklendi",
+    authorId: "person-self",
+    authorName: "Ali Yılmaz",
+    createdAt: "2026-06-13T10:00:00.000Z",
+    isCurrent: true,
+  },
+  {
+    id: "ver-1b",
+    fileId: "f-1",
+    contentHash: "blake3-f-1-v2",
+    sizeBytes: 1_180_000,
+    label: "Renk düzeltmesi",
+    authorId: "person-ayse",
+    authorName: "Ayşe Demir",
+    createdAt: "2026-06-12T15:00:00.000Z",
+    isCurrent: false,
+  },
+  {
+    id: "ver-1a",
+    fileId: "f-1",
+    contentHash: "blake3-f-1-v1",
+    sizeBytes: 980_000,
+    label: "İlk içe aktarma",
+    authorId: "person-self",
+    authorName: "Ali Yılmaz",
+    createdAt: "2026-06-10T09:00:00.000Z",
+    isCurrent: false,
+  },
+];
+
+export const sampleActivities: ActivityItem[] = [
+  {
+    id: "act-1",
+    actorId: "person-self",
+    actorName: "Ali Yılmaz",
+    action: "tag.add",
+    objectType: "file",
+    objectId: "f-1",
+    objectName: "deprem-saha-01.jpg",
+    params: { tag: "Acil" },
+    createdAt: "2026-06-13T10:00:00.000Z",
+    undoable: false,
+  },
+  {
+    id: "act-2",
+    actorId: "person-ayse",
+    actorName: "Ayşe Demir",
+    action: "file.add",
+    objectType: "file",
+    objectId: "f-3",
+    objectName: "roportaj-meclis.mp4",
+    createdAt: "2026-06-13T09:30:00.000Z",
+    undoable: false,
+  },
+  {
+    id: "act-3",
+    actorId: "person-self",
+    actorName: "Ali Yılmaz",
+    action: "collection.create",
+    objectType: "collection",
+    objectId: "col-deprem",
+    objectName: "Deprem Dosyası",
+    createdAt: "2026-06-12T16:00:00.000Z",
+    undoable: false,
   },
 ];
 

@@ -10,9 +10,11 @@ import { InspectorPanel } from "@/components/inspector/inspector-panel";
 import { TopBar } from "@/components/shell/top-bar";
 import { StatusBar } from "@/components/shell/status-bar";
 import { useAppStore } from "@/stores/app-store";
+import { useBootstrap } from "@/hooks/use-bootstrap";
 
 function App() {
   const inspectorOpen = useAppStore((s) => s.inspectorOpen);
+  useBootstrap();
 
   return (
     <SidebarProvider>

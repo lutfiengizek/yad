@@ -96,6 +96,34 @@ Frontend, backend'i beklemeden geliştirebilmeli. Çözüm: **typed api katmanı
 
 ---
 
+## 6b. Git iş akışı (TEK DAL · KAPSAMLI COMMIT — çakışmayı önler)
+
+> İki agent **tek bir ortak çalışma ağacı ve tek bir git HEAD** paylaşır. Bu yüzden git
+> disiplini, dosya-bölgesi disiplini kadar kritiktir. Aşağıdaki kurallar zorunludur.
+
+1. **Tek dal:** İkisi de `main` üzerinde çalışır. **Agent başına ayrı dal AÇILMAZ** —
+   ortak HEAD tek olduğu için dal değiştiren agent, diğerinin ayağının altındaki ağacı
+   kaydırır (komut/build kırılır, commit'ler yanlış dala düşer).
+2. **`git add -A` / `git add .` / `git commit -a` YASAK.** Bu komutlar diğer agent'ın
+   (belki yarım) dosyalarını süpürüp tek "bundle" commit'e tıkar, yanlış atıf üretir ve
+   geçmişi karıştırır. **Her agent yalnızca kendi yolunu ekler:**
+   - Backend: `git add src-tauri/`
+   - Frontend: `git add src/`
+   - Paylaşılan dosya (`docs/`, kök `*.md`, `*.config.*`, `tauri.conf.json`): **sadece o
+     değişikliği yapan agent**, dosyayı **adıyla** ekler (`git add docs/build/01-api-contract.md`).
+3. **Küçük, kapsamlı commit:** Her görev kendi commit'i. Mesaj agent + milestone belirtir
+   (örn. `M1 backend: import_files + BLAKE3`). Co-author satırı korunur.
+4. **Sık commit:** Bir görev yeşil olunca (test+lint) hemen commit'le; böylece yarım dosya
+   ortak ağaçta açıkta kalmaz.
+5. **Push yalnızca kullanıcı isteyince.** Geçmiş yeniden yazma (`reset --hard`, `rebase`,
+   force-push) ortak/aktif repoda **yapılmaz**; gerekiyorsa tek agent yapar, diğeri durur.
+6. **Karışıklık olursa "tek elden uzlaştırma":** Çelişki/yanlış-bundle fark edilirse
+   agentlardan **biri git'e dokunmayı duraklatır**, diğeri tek başına uzlaştırır
+   (içerik kaybı yok: her şey ya bir commit'te ya çalışma ağacındadır), sonra ikisi de
+   yeniden `main`'de devam eder. Aynı anda iki agent git'e dokunmaz.
+
+---
+
 ## 7. Dizin yapısı (referans)
 
 ```

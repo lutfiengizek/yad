@@ -21,6 +21,11 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
+            // Otomatik güncelleme yalnızca masaüstünde (M6).
+            #[cfg(desktop)]
+            app.handle()
+                .plugin(tauri_plugin_updater::Builder::new().build())?;
+
             let app_data = app.path().app_data_dir()?;
             let db_path = app_data.join("yad.db");
             let app_state = AppState::new(&db_path, app.handle().clone())
@@ -91,6 +96,8 @@ pub fn run() {
             commands::collab::sync_status,
             commands::conflict::conflict_list,
             commands::conflict::conflict_resolve,
+            commands::update::update_check,
+            commands::update::update_install,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
